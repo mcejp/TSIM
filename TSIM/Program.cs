@@ -1,6 +1,4 @@
-﻿using System;
-using TSIM.Model;
-using TSIM.RailroadDatabase;
+﻿using TSIM.RailroadDatabase;
 
 namespace TSIM
 {
@@ -8,13 +6,29 @@ namespace TSIM
     {
         static void Main(string[] args)
         {
-            // 1. load scenario
-            var scenario = ScenarioLoader.LoadScenario("data/scenario.json");
+            string dbPath = "simdb.sqlite";
+
+            // 0. import GeoJSON data to SQLite
+            InitializeDatabaseFrom(dbPath, "data/scenario.json");
+
+            // 1. open database
+            var db = SqliteSimDatabase.Open(dbPath);
 
             // 2. simulate
 
             // 3. render 2D/3D view
-            GraphicsOutput.RenderSvg(scenario.coordinateSpace, scenario.networkDatabase, scenario.units, "output.svg");
+            GraphicsOutput.RenderSvg(db.GetCoordinateSpace(), db, db.EnumerateUnits(), "output.svg");
+        }
+
+        private static void InitializeDatabaseFrom(string dbPath, string scenarioJsonFilename)
+        {
+            var scenario = ScenarioLoader.LoadScenario(scenarioJsonFilename);
+
+            using (var db = SqliteSimDatabase.New(dbPath, scenario.coordinateSpace))
+            {
+                db.AddSegments(scenario.networkDatabase.EnumerateSegments());
+                db.AddUnits(scenario.units);
+            }
         }
     }
 }

@@ -19,7 +19,7 @@ namespace TSIM.RailroadDatabase
             _path = path;
         }
 
-        public IEnumerable<Segment> IterateSegments()
+        public IEnumerable<Segment> EnumerateSegments()
         {
             List<Segment> segments = new List<Segment>();
 

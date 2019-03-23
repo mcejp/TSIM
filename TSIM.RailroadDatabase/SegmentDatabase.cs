@@ -6,6 +6,6 @@ namespace TSIM.RailroadDatabase
 {
     public interface INetworkDatabase
     {
-        IEnumerable<Segment> IterateSegments();
+        IEnumerable<Segment> EnumerateSegments();
     }
 }

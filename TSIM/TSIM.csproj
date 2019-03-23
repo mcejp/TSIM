@@ -10,8 +10,4 @@
       <ProjectReference Include="..\TSIM.RailroadDatabase\TSIM.RailroadDatabase.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Model" />
-    </ItemGroup>
-
 </Project>
