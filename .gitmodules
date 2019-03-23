@@ -1,0 +1,3 @@
+[submodule "GtkSharp"]
+	path = GtkSharp
+	url = https://github.com/GtkSharp/GtkSharp.git

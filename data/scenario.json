@@ -1,0 +1,9 @@
+{
+  "coordinateSystemOrigin": [50.083239, 14.435278],
+  "networkDatabase": "DOP_PID_TRASY_L.json",
+  "units": [
+    {
+      "class": "generic"
+    }
+  ]
+}

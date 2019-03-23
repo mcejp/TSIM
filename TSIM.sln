@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSIM", "TSIM\TSIM.csproj", "{1C176324-EF55-4D98-BA9A-D4298D9C89E2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSIM.Tests", "TSIM.Tests\TSIM.Tests.csproj", "{C7DDF57D-0EF7-4834-8DBC-8B15F280A5CE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSIM.RailroadDatabase", "TSIM.RailroadDatabase\TSIM.RailroadDatabase.csproj", "{302C28F8-3F99-487A-A956-57ED5AD5A8C0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CairoSharp", "GtkSharp\Source\Libs\CairoSharp\CairoSharp.csproj", "{168F5DAA-0CE2-4A96-96F4-4F25E2773924}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSIM.Model", "TSIM.Model\TSIM.Model.csproj", "{CF401096-52D3-454F-BA07-7AFFCA4A68F6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1C176324-EF55-4D98-BA9A-D4298D9C89E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C176324-EF55-4D98-BA9A-D4298D9C89E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C176324-EF55-4D98-BA9A-D4298D9C89E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C176324-EF55-4D98-BA9A-D4298D9C89E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C7DDF57D-0EF7-4834-8DBC-8B15F280A5CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7DDF57D-0EF7-4834-8DBC-8B15F280A5CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7DDF57D-0EF7-4834-8DBC-8B15F280A5CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7DDF57D-0EF7-4834-8DBC-8B15F280A5CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{302C28F8-3F99-487A-A956-57ED5AD5A8C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{302C28F8-3F99-487A-A956-57ED5AD5A8C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{302C28F8-3F99-487A-A956-57ED5AD5A8C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{302C28F8-3F99-487A-A956-57ED5AD5A8C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{168F5DAA-0CE2-4A96-96F4-4F25E2773924}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{168F5DAA-0CE2-4A96-96F4-4F25E2773924}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{168F5DAA-0CE2-4A96-96F4-4F25E2773924}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{168F5DAA-0CE2-4A96-96F4-4F25E2773924}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF401096-52D3-454F-BA07-7AFFCA4A68F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF401096-52D3-454F-BA07-7AFFCA4A68F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF401096-52D3-454F-BA07-7AFFCA4A68F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF401096-52D3-454F-BA07-7AFFCA4A68F6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
