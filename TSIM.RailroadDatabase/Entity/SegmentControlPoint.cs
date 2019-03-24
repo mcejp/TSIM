@@ -1,5 +1,8 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace TSIM.RailroadDatabase.Entity
 {
+    [Table("segment_control_point")]
     public class SegmentControlPoint
     {
         public int Id { get; set; }

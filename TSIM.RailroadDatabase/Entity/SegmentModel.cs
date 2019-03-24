@@ -1,21 +1,23 @@
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics;
 using System.Linq;
 using TSIM.Model;
 
 namespace TSIM.RailroadDatabase.Entity
 {
-    public class Segment
+    [Table("segment")]
+    public class SegmentModel
     {
-        public int SegmentId { get; set; }
+        public int Id { get; set; }
         public SegmentType Type { get; set; }
         public ICollection<SegmentControlPoint> ControlPoints { get; set; }
 
-        private Segment()
+        private SegmentModel()
         {
         }
 
-        public Segment(Model.Segment segment)
+        public SegmentModel(Model.Segment segment)
         {
             Type = segment.Type;
             ControlPoints = new List<SegmentControlPoint>();

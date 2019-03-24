@@ -1,3 +1,5 @@
+using System;
+using System.Diagnostics;
 using System.Numerics;
 
 namespace TSIM.Model
@@ -11,6 +13,13 @@ namespace TSIM.Model
         {
             this.Type = type;
             ControlPoints = new[] {start, end};
+        }
+
+        public (Vector3, Quaternion) GetMidpoint()
+        {
+            Trace.Assert(ControlPoints.Length == 2);
+
+            return ((ControlPoints[0] + ControlPoints[1]) * 0.5f, Utility.DirectionVectorToQuaternion(ControlPoints[1] - ControlPoints[0]));
         }
     }
 }

@@ -11,26 +11,23 @@ namespace TSIM.RailroadDatabase
     public class GeoJsonNetworkDatabase : INetworkDatabase
     {
         private readonly SimulationCoordinateSpace _coordinateSpace;
-        private readonly string _path;
+        private readonly List<Segment> _segments = new List<Segment>();
 
         public GeoJsonNetworkDatabase(SimulationCoordinateSpace coordinateSpace, string path)
         {
             _coordinateSpace = coordinateSpace;
-            _path = path;
+
+            using (StreamReader file = File.OpenText(path))
+            {
+                var document = JsonDocument.Parse(file.BaseStream);
+
+                ProcessFeatureCollection(document.RootElement, _segments);
+            }
         }
 
         public IEnumerable<Segment> EnumerateSegments()
         {
-            List<Segment> segments = new List<Segment>();
-
-            using (StreamReader file = File.OpenText(_path))
-            {
-                var document = JsonDocument.Parse(file.BaseStream);
-
-                ProcessFeatureCollection(document.RootElement, segments);
-            }
-
-            return segments;
+            return _segments;
         }
 
         private void ProcessFeatureCollection(in JsonElement featureCollection, List<Segment> segments)

@@ -1,5 +1,8 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace TSIM.RailroadDatabase.Entity
 {
+    [Table("simulation_coordinate_space")]
     public class SimulationCoordinateSpace
     {
         public int Id { get; set; }

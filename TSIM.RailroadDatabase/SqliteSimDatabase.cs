@@ -15,10 +15,9 @@ namespace TSIM.RailroadDatabase
         {
             private readonly string _filename;
 
-            public DbSet<Entity.Segment> Segments { get; set; }
-            public DbSet<Entity.SegmentControlPoint> SegmentControlPoints { get; set; }
+            public DbSet<Entity.SegmentModel> Segments { get; set; }
             public DbSet<Entity.SimulationCoordinateSpace> SimulationCoordinateSpaces { get; set; }
-            public DbSet<Entity.Unit> Units { get; set; }
+            public DbSet<Entity.UnitModel> Units { get; set; }
 
             public MyContext(string filename)
             {
@@ -28,12 +27,6 @@ namespace TSIM.RailroadDatabase
             protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
             {
                 optionsBuilder.UseSqlite("Data Source=" + _filename);
-            }
-
-            protected override void OnModelCreating(ModelBuilder modelBuilder)
-            {
-                modelBuilder.Entity<Entity.Segment>()
-                    .HasMany(s => s.ControlPoints);
             }
         }
 
@@ -68,13 +61,13 @@ namespace TSIM.RailroadDatabase
 
         public void AddSegments(IEnumerable<Segment> segments)
         {
-            db_.Segments.AddRange(segments.Select(segment => new Entity.Segment(segment)));
+            db_.Segments.AddRange(segments.Select(segment => new Entity.SegmentModel(segment)));
             db_.SaveChanges();
         }
 
         public void AddUnits(IEnumerable<Unit> units)
         {
-            db_.Units.AddRange(units.Select(unit => new Entity.Unit(unit)));
+            db_.Units.AddRange(units.Select(unit => new Entity.UnitModel(unit)));
             db_.SaveChanges();
         }
 
@@ -90,7 +83,7 @@ namespace TSIM.RailroadDatabase
 
         public IEnumerable<Unit> EnumerateUnits()
         {
-            return db_.Units.Select(unit => unit.ToModel());
+            return db_.Units.Include(u => u.Class).Select(unit => unit.ToModel());
         }
 
         public SimulationCoordinateSpace GetCoordinateSpace()

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Net.Sockets;
+using System.Linq;
 using System.Text.Json;
 using TSIM.Model;
 using TSIM.RailroadDatabase;
@@ -12,6 +12,7 @@ namespace TSIM
         public (double lat, double lon) CoordinateSystemOrigin;
 
         public string NetworkDatabaseFileName;
+        public string UnitClassDatabaseFileName;
         public readonly List<UnitDescriptor> Units = new List<UnitDescriptor>();
 
         public class UnitDescriptor
@@ -24,6 +25,7 @@ namespace TSIM
     {
         public static (SimulationCoordinateSpace coordinateSpace,
                        INetworkDatabase networkDatabase,
+                       IUnitClassDatabase unitClassDatabase,
                        List<Unit> units
                        ) LoadScenario(string filename)
         {
@@ -36,14 +38,17 @@ namespace TSIM
                 var coordinateSpace = new SimulationCoordinateSpace(desc.CoordinateSystemOrigin.lat, desc.CoordinateSystemOrigin.lon);
                 var networkDatabase = new GeoJsonNetworkDatabase(coordinateSpace,
                                                                  Path.Join(basePath, desc.NetworkDatabaseFileName));
+                var unitClassDatabase = new JsonUnitClassDatabase(Path.Join(basePath, desc.UnitClassDatabaseFileName));
                 var units = new List<Unit>();
 
                 foreach (var unitDesc in desc.Units)
                 {
-                    units.Add(new Unit(unitDesc.Class));
+                    var class_ = unitClassDatabase.UnitClassByName(unitDesc.Class);
+                    var (pos, orientation) = networkDatabase.EnumerateSegments().First().GetMidpoint();
+                    units.Add(new Unit(class_, pos, orientation));
                 }
 
-                return (coordinateSpace, networkDatabase, units);
+                return (coordinateSpace, networkDatabase, unitClassDatabase, units);
             }
         }
 
@@ -56,7 +61,8 @@ namespace TSIM
             {
                 CoordinateSystemOrigin = (document.RootElement.GetProperty("coordinateSystemOrigin")[0].GetDouble(),
                     document.RootElement.GetProperty("coordinateSystemOrigin")[1].GetDouble()),
-                NetworkDatabaseFileName = document.RootElement.GetProperty("networkDatabase").GetString()
+                NetworkDatabaseFileName = document.RootElement.GetProperty("networkDatabase").GetString(),
+                UnitClassDatabaseFileName = document.RootElement.GetProperty("unitClassDatabase").GetString()
             };
 
             foreach (var unitJson in document.RootElement.GetProperty("units").EnumerateArray())
