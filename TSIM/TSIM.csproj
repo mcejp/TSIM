@@ -6,8 +6,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\GtkSharp\Source\Libs\CairoSharp\CairoSharp.csproj" />
       <ProjectReference Include="..\TSIM.RailroadDatabase\TSIM.RailroadDatabase.csproj" />
+      <Reference Include="..\GtkSharp\BuildOutput\Release\CairoSharp.dll"/>
+      <Reference Include="..\GtkSharp\BuildOutput\Release\GLibSharp.dll"/>
+      <Reference Include="..\GtkSharp\BuildOutput\Release\PangoSharp.dll"/>
     </ItemGroup>
 
 </Project>

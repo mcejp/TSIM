@@ -11,6 +11,7 @@ namespace TSIM
     internal class GraphicsOutput
     {
         private static readonly Color chameleon1 = FromHex("#8ae234");
+        private static readonly Color chameleon3 = FromHex("#4e9a06");
         private static readonly Color scarledRed1 = FromHex("#ef2929");
         private static readonly Color plum1 = FromHex("#ad7fa8");
         private static readonly Color aluminium1 = FromHex("#eeeeec");
@@ -60,6 +61,7 @@ namespace TSIM
             cr.MoveTo(0, h);
             cr.ShowText($"Scale: full width = {(w / scale)} meters");
 
+            // Draw railway
             foreach (var seg in ndb.EnumerateSegments())
             {
                 Trace.Assert(seg.ControlPoints.Length == 2);
@@ -73,6 +75,7 @@ namespace TSIM
                 cr.Stroke();
             }
 
+            // Draw trains
             foreach (var unit in units)
             {
                 var pos = unit.Pos;
@@ -86,6 +89,13 @@ namespace TSIM
                 cr.MoveTo(posCS.X * 2 - headCS.X, posCS.Y * 2 - headCS.Y);
                 cr.LineTo(headCS);
                 cr.Stroke();
+
+                var layout = Pango.CairoHelper.CreateLayout(cr);
+                layout.FontDescription = Pango.FontDescription.FromString("Arial Bold 7");
+                layout.SetText($"{unit.Class.Name}\n{unit.Velocity.Length() * 3.6} km/h");
+                cr.SetSourceColor(chameleon3);
+                cr.MoveTo(posCS);
+                Pango.CairoHelper.ShowLayout(cr, layout);
             }
 
             DrawCrosshair(cr, new PointD(w / 2, h / 2));
