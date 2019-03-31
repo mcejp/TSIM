@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using Cairo;
@@ -8,7 +7,7 @@ using TSIM.RailroadDatabase;
 
 namespace TSIM
 {
-    internal class GraphicsOutput
+    public class GraphicsOutput
     {
         private static readonly Color chameleon1 = FromHex("#8ae234");
         private static readonly Color chameleon3 = FromHex("#4e9a06");
@@ -36,30 +35,22 @@ namespace TSIM
                 int.Parse(hex.Substring(4, 2), System.Globalization.NumberStyles.HexNumber) * (1.0 /255.0));
         }
 
-        public static void RenderSvg(SimulationCoordinateSpace coordinateSpace,
+        private static void RenderToContext(SimulationCoordinateSpace coordinateSpace,
                                           INetworkDatabase ndb,
-                                          IEnumerable<Unit> units,
-                                          string filename)
+                                          IUnitDatabase units,
+                                          Context cr,
+                                          PointD center,
+                                          double scale)
         {
             Console.WriteLine("RenderFullView start");
 
-            var w = 1000;
-            var h = 600;
-            var scale = 0.04;        // meters/pixel
-
-            var center = new PointD(w/2, h/2);
-
-            SvgSurface surf = new SvgSurface(filename, w, h);
-            Context cr = new Context(surf);
-
             cr.SetSourceColor(aluminium1);
-            cr.Rectangle(0, 0, w, h);
-            cr.Fill();
+            cr.Paint();
 
             cr.SetSourceColor(aluminium6);
 
-            cr.MoveTo(0, h);
-            cr.ShowText($"Scale: full width = {(w / scale)} meters");
+//            cr.MoveTo(0, h);
+//            cr.ShowText($"Scale: full width = {(w / scale)} meters");
 
             // Draw railway
             foreach (var seg in ndb.EnumerateSegments())
@@ -76,7 +67,7 @@ namespace TSIM
             }
 
             // Draw trains
-            foreach (var unit in units)
+            foreach (var unit in units.EnumerateUnits())
             {
                 var pos = unit.Pos;
                 var head = unit.Pos + Vector3.Transform(new Vector3((float) (5 / scale), 0, 0), unit.Orientation);
@@ -92,18 +83,53 @@ namespace TSIM
 
                 var layout = Pango.CairoHelper.CreateLayout(cr);
                 layout.FontDescription = Pango.FontDescription.FromString("Arial Bold 7");
-                layout.SetText($"{unit.Class.Name}\n{unit.Velocity.Length() * 3.6} km/h");
+                layout.SetText($"{unit.Class.Name}\n{unit.Velocity.Length() * 3.6:F1} km/h");
                 cr.SetSourceColor(chameleon3);
                 cr.MoveTo(posCS);
                 Pango.CairoHelper.ShowLayout(cr, layout);
             }
 
-            DrawCrosshair(cr, new PointD(w / 2, h / 2));
+            DrawCrosshair(cr, center);
+
+            Console.WriteLine("RenderFullView done");
+        }
+
+        public static void RenderSvg(SimulationCoordinateSpace coordinateSpace,
+            INetworkDatabase ndb,
+            IUnitDatabase units,
+            string filename)
+        {
+            var w = 1000;
+            var h = 600;
+            var scale = 0.04;        // meters/pixel
+
+            var center = new PointD(w/2, h/2);
+
+            var surf = new SvgSurface(filename, w, h);
+            Context cr = new Context(surf);
+
+            RenderToContext(coordinateSpace, ndb, units, cr, center, scale);
 
             surf.Flush();
             surf.Finish();
+        }
 
-            Console.WriteLine("RenderFullView done");
+        public static void RenderPng(SimulationCoordinateSpace coordinateSpace,
+            INetworkDatabase ndb,
+            IUnitDatabase units,
+            string filename,
+            int w, int h,
+            double scale)
+        {
+            var center = new PointD(w/2, h/2);
+
+            var surf = new ImageSurface(Format.Argb32, w, h);
+            Context cr = new Context(surf);
+
+            RenderToContext(coordinateSpace, ndb, units, cr, center, scale);
+
+            surf.WriteToPng(filename);
+            surf.Finish();
         }
 
         private static void DrawCrosshair(Context cr, PointD pointD)

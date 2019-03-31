@@ -7,5 +7,8 @@ namespace TSIM.RailroadDatabase
     public interface INetworkDatabase
     {
         IEnumerable<Segment> EnumerateSegments();
+        IEnumerable<SegmentLink> EnumerateSegmentLinks();
+        Segment GetSegmentById(int id);
+        SegmentLink[] FindConnectingSegments(int segmentId, SegmentEndpoint ep);
     }
 }

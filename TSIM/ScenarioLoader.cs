@@ -44,7 +44,8 @@ namespace TSIM
                 foreach (var unitDesc in desc.Units)
                 {
                     var class_ = unitClassDatabase.UnitClassByName(unitDesc.Class);
-                    var (pos, orientation) = networkDatabase.EnumerateSegments().First().GetMidpoint();
+                    var (pos, dir) = networkDatabase.EnumerateSegments().First().GetPointAndTangent(0.5f, SegmentEndpoint.End);
+                    var orientation = Utility.DirectionVectorToQuaternion(dir);
                     units.Add(new Unit(class_, pos, orientation));
                 }
 

@@ -7,15 +7,17 @@ using TSIM.Model;
 
 namespace TSIM.RailroadDatabase
 {
-    public class SqliteSimDatabase : IDisposable, INetworkDatabase
+    public class SqliteSimDatabase : IDisposable, INetworkDatabase, IUnitDatabase
     {
-        private MyContext db_;
+        private readonly MyContext db_;
+        private Unit[] _units;
 
         private class MyContext : DbContext
         {
             private readonly string _filename;
 
             public DbSet<Entity.SegmentModel> Segments { get; set; }
+            public DbSet<SegmentLink> SegmentLinks { get; set; }
             public DbSet<Entity.SimulationCoordinateSpace> SimulationCoordinateSpaces { get; set; }
             public DbSet<Entity.UnitModel> Units { get; set; }
 
@@ -56,6 +58,11 @@ namespace TSIM.RailroadDatabase
 
         public static SqliteSimDatabase Open(string dbPath)
         {
+            if (!File.Exists(dbPath))
+            {
+                throw new FileNotFoundException("Database must exist: " + dbPath);
+            }
+
             return new SqliteSimDatabase(dbPath);
         }
 
@@ -65,6 +72,13 @@ namespace TSIM.RailroadDatabase
             db_.SaveChanges();
         }
 
+        public void AddSegmentLinks(IEnumerable<SegmentLink> segmentLinks)
+        {
+            db_.SegmentLinks.AddRange(segmentLinks);
+            db_.SaveChanges();
+        }
+
+        // FIXME: this is hella wrong and out of sync with _units
         public void AddUnits(IEnumerable<Unit> units)
         {
             db_.Units.AddRange(units.Select(unit => new Entity.UnitModel(unit)));
@@ -81,14 +95,71 @@ namespace TSIM.RailroadDatabase
             return from segment in db_.Segments.Include(s => s.ControlPoints) select segment.ToModel();
         }
 
+        public IEnumerable<SegmentLink> EnumerateSegmentLinks()
+        {
+            return db_.SegmentLinks;
+        }
+
         public IEnumerable<Unit> EnumerateUnits()
         {
-            return db_.Units.Include(u => u.Class).Select(unit => unit.ToModel());
+            EnsureUnitsLoaded();
+
+            return _units;
+        }
+
+        public int GetNumUnits()
+        {
+            EnsureUnitsLoaded();
+
+            return _units.Length;
         }
 
         public SimulationCoordinateSpace GetCoordinateSpace()
         {
             return db_.SimulationCoordinateSpaces.First().ToModel();
+        }
+
+        public void SetUnitSpeed(int id, float speed)
+        {
+            EnsureUnitsLoaded();
+
+            // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+            var u = _units[id];
+            u.Velocity = Utility.QuaternionToDirectionVector(u.Orientation) * speed;
+            _units[id] = u;
+        }
+
+        private void EnsureUnitsLoaded()
+        {
+            if (_units == null)
+            {
+                _units = db_.Units.Include(u => u.Class).Select(unit => unit.ToModel()).ToArray();
+            }
+        }
+
+        public Segment GetSegmentById(int id)
+        {
+            return db_.Segments.Where(s => s.Id == id).Include(s => s.ControlPoints).First().ToModel();
+        }
+
+        public SegmentLink[] FindConnectingSegments(int segmentId, SegmentEndpoint ep)
+        {
+            return db_.SegmentLinks.Where(l =>
+                (l.Segment1 == segmentId && l.Ep1 == ep) || (l.Segment2 == segmentId && l.Ep2 == ep)).ToArray();
+        }
+
+        public ref Unit GetUnitByIndex(int unitIndex)
+        {
+            EnsureUnitsLoaded();
+
+            return ref _units[unitIndex];
+        }
+
+        public void UpdateUnitByIndex(int unitIndex, Unit unit)
+        {
+            EnsureUnitsLoaded();
+
+            _units[unitIndex] = unit;
         }
     }
 }

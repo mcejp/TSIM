@@ -34,5 +34,10 @@ namespace TSIM.Model
 
             return Quaternion.Normalize(q);
         }
+
+        public static Vector3 QuaternionToDirectionVector(Quaternion quat)
+        {
+            return Vector3.Transform(new Vector3(1, 0, 0), quat);
+        }
     }
 }

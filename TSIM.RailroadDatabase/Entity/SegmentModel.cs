@@ -19,6 +19,7 @@ namespace TSIM.RailroadDatabase.Entity
 
         public SegmentModel(Model.Segment segment)
         {
+            Id = segment.Id;
             Type = segment.Type;
             ControlPoints = new List<SegmentControlPoint>();
 
@@ -33,7 +34,7 @@ namespace TSIM.RailroadDatabase.Entity
             var cp = ControlPoints.ToArray();
 
             Trace.Assert(cp.Length == 2);
-            return new Model.Segment(Type, cp[0].ToVector3(), cp[1].ToVector3());
+            return new Model.Segment(Id, Type, cp[0].ToVector3(), cp[1].ToVector3());
         }
     }
 }

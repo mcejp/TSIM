@@ -16,6 +16,5 @@ namespace TSIM.Model
             Velocity = Vector3.Zero;
             Orientation = orientation;
         }
-
     }
 }
