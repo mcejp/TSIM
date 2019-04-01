@@ -26,13 +26,25 @@ namespace TSIM.Model
 
         public Vector3 GetEndpoint(SegmentEndpoint ep)
         {
-            if (ep == SegmentEndpoint.Start)
+            return ep switch {
+                SegmentEndpoint.Start => ControlPoints[0],
+                SegmentEndpoint.End => ControlPoints[ControlPoints.Length - 1]
+            };
+        }
+
+        public Vector3 GetEndpointTangent(SegmentEndpoint ep, bool outwards)
+        {
+            Trace.Assert(ControlPoints.Length == 2);
+
+            var tangent = Vector3.Normalize(ControlPoints[1] - ControlPoints[0]);
+
+            if ((ep == SegmentEndpoint.Start && !outwards) || (ep == SegmentEndpoint.End && outwards))
             {
-                return ControlPoints[0];
+                return tangent;
             }
             else
             {
-                return ControlPoints[ControlPoints.Length - 1];
+                return -tangent;
             }
         }
 

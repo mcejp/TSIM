@@ -82,5 +82,13 @@ namespace TSIM.Model
             var dy = Math.Max(0, Math.Max(ymin - y, y - ymax));
             return (float) Math.Sqrt(dx * dx + dy * dy);
         }
+
+        public static SegmentEndpoint Other(this SegmentEndpoint ep)
+        {
+            return ep switch {
+                SegmentEndpoint.Start => SegmentEndpoint.End,
+                SegmentEndpoint.End => SegmentEndpoint.Start
+            };
+        }
     }
 }

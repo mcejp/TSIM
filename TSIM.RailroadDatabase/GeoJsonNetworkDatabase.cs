@@ -80,20 +80,23 @@ namespace TSIM.RailroadDatabase
             // Discover segment links
             foreach (var seg in _segments)
             {
-                float range = 0.2f;
+                const float range = 0.2f;
+                const float maxAngle = (float) (Math.PI * 0.25f);        // 45 degrees
 
                 // Check both endpoints for possible connections
-                AddLinksForSegmentEndpoint(seg, SegmentEndpoint.Start, range);
-                AddLinksForSegmentEndpoint(seg, SegmentEndpoint.End, range);
+                AddLinksForSegmentEndpoint(seg, SegmentEndpoint.Start, range, maxAngle);
+                AddLinksForSegmentEndpoint(seg, SegmentEndpoint.End, range, maxAngle);
             }
         }
 
-        private void AddLinksForSegmentEndpoint(Segment seg, SegmentEndpoint ep, float range)
+        private void AddLinksForSegmentEndpoint(Segment seg, SegmentEndpoint ep, float range, float maxAngle)
         {
             var point = seg.GetEndpoint(ep);
 
             // Get a list of (segment, endpoint) tuples around point of interest
             var candidates = FindSegmentEndpointsNear(point, range);
+
+            var maxCosine = Math.Cos(maxAngle);
 
             foreach (var (candiSeg, candiEp) in candidates)
             {
@@ -104,6 +107,15 @@ namespace TSIM.RailroadDatabase
                 if (seg.Id < candiSeg.Id)
                 {
                     // TODO: we could also check 1st-order continuity (tangent)
+
+                    var tangent1 = seg.GetEndpointTangent(ep, true);
+                    var tangent2 = candiSeg.GetEndpointTangent(candiEp, false);
+
+                    if (Vector3.Dot(tangent1, tangent2) < maxCosine)
+                    {
+                        // Reject pair of segments on basis of too great angle
+                        continue;
+                    }
 
                     _segmentLinks.Add(new SegmentLink(linkId, seg.Id, ep, candiSeg.Id, candiEp));
                 }

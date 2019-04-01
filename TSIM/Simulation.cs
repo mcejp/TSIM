@@ -25,7 +25,7 @@ namespace TSIM
 
             // TODO: init currentSegmentByUnitId, tByUnitId
             currentSegmentByUnitId = new int?[] {1};
-            dirByUnitId = new SegmentEndpoint[] {SegmentEndpoint.End};
+            dirByUnitId = new SegmentEndpoint[] {SegmentEndpoint.Start};
             tByUnitId = new float[] { 0.5f };
         }
 
@@ -37,7 +37,7 @@ namespace TSIM
 
                 // Update unit position based on velocity
                 // If unit is on rail, it should stay snapped
-                var distanceToTravel = unit.Velocity.Length();
+                var distanceToTravel = unit.Velocity.Length() * dt;
 
                 // Find out in which segment we are and how far along
                 var segId = currentSegmentByUnitId[unitIndex].Value;
@@ -70,7 +70,7 @@ namespace TSIM
                     if (travellableDistance > distanceToTravel)
                     {
                         // Only works if ds/dt is uniform for curve!!!
-                        t = (float)(t + tDir * distanceToTravel / segLength * dt);
+                        t = (float)(t + tDir * distanceToTravel / segLength);
 
 //                        Console.WriteLine($"Unit {unitIndex} update: continue segment segId={segId} dir={dir} t={t}");
                         break;
@@ -84,7 +84,11 @@ namespace TSIM
 
                         if (candidates.Length == 0)
                         {
-                            throw new NotImplementedException("Ran out of track and cannot cope.");
+                            //throw new NotImplementedException("Ran out of track and cannot cope.");
+
+                            // For now just turn around
+                            dir = dir.Other();
+                            continue;
                         }
 
                         if (candidates.Length > 1)
@@ -97,7 +101,7 @@ namespace TSIM
                                 Console.WriteLine($" - candidate is link {link} segment {candiSeg}");
                             }
 
-                            throw new NotImplementedException("Cannot currently handle track splits");
+                            //throw new NotImplementedException("Cannot currently handle track splits");
                         }
 
                         // Only one candidate left. Find out more.
@@ -119,7 +123,7 @@ namespace TSIM
                         }
 
                         seg = Network.GetSegmentById(segId);
-//                        Console.WriteLine($"Unit {unitIndex} update: new segment segId={segId} dir={dir} t={t}");
+//                        Console.WriteLine($"Unit {unitIndex} update: new segment {seg} through link {candidates[0]} with dir={dir} t={t}");
                     }
                 }
 

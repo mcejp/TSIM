@@ -47,10 +47,14 @@ namespace TSIM
             cr.SetSourceColor(aluminium1);
             cr.Paint();
 
-            cr.SetSourceColor(aluminium6);
-
 //            cr.MoveTo(0, h);
 //            cr.ShowText($"Scale: full width = {(w / scale)} meters");
+
+            // Draw quadtree
+            DrawQuadTreeNode(GeoJsonNetworkDatabase.StaticInstanceForDebug.GetQuadTreeForDebug().GetRootNodeForDebug(), cr, center, scale);
+
+            // Draw rail links
+            DrawLinks(ndb, cr, center, scale);
 
             // Draw railway
             foreach (var seg in ndb.EnumerateSegments())
@@ -61,16 +65,11 @@ namespace TSIM
                 var end = SimToCanvasSpace(seg.ControlPoints[1], center, scale);
 
                 cr.LineWidth = 1;
+                cr.SetSourceColor(aluminium6);
                 cr.MoveTo(start);
                 cr.LineTo(end);
                 cr.Stroke();
             }
-
-            // Draw rail links
-            DrawLinks(ndb, cr, center, scale);
-
-            // Draw quadtree
-            DrawQuadTreeNode(GeoJsonNetworkDatabase.StaticInstanceForDebug.GetQuadTreeForDebug().GetRootNodeForDebug(), cr, center, scale);
 
             // Draw trains
             foreach (var unit in units.EnumerateUnits())
