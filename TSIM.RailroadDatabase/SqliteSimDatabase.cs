@@ -92,7 +92,7 @@ namespace TSIM.RailroadDatabase
 
         public IEnumerable<Segment> EnumerateSegments()
         {
-            return from segment in db_.Segments.Include(s => s.ControlPoints) select segment.ToModel();
+            return from segment in db_.Segments select segment.ToModel();
         }
 
         public IEnumerable<SegmentLink> EnumerateSegmentLinks()
@@ -139,7 +139,7 @@ namespace TSIM.RailroadDatabase
 
         public Segment GetSegmentById(int id)
         {
-            return db_.Segments.Where(s => s.Id == id).Include(s => s.ControlPoints).First().ToModel();
+            return db_.Segments.First(s => s.Id == id).ToModel();
         }
 
         public SegmentLink[] FindConnectingSegments(int segmentId, SegmentEndpoint ep)

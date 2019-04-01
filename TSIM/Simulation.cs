@@ -89,6 +89,14 @@ namespace TSIM
 
                         if (candidates.Length > 1)
                         {
+                            Console.WriteLine($"Unsure how to continue after segment {seg}:");
+                            foreach (var link in candidates)
+                            {
+                                var candiSeg =
+                                    Network.GetSegmentById(link.Segment1 != segId ? link.Segment1 : link.Segment2);
+                                Console.WriteLine($" - candidate is link {link} segment {candiSeg}");
+                            }
+
                             throw new NotImplementedException("Cannot currently handle track splits");
                         }
 

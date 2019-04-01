@@ -66,6 +66,12 @@ namespace TSIM
                 cr.Stroke();
             }
 
+            // Draw rail links
+            DrawLinks(ndb, cr, center, scale);
+
+            // Draw quadtree
+            DrawQuadTreeNode(GeoJsonNetworkDatabase.StaticInstanceForDebug.GetQuadTreeForDebug().GetRootNodeForDebug(), cr, center, scale);
+
             // Draw trains
             foreach (var unit in units.EnumerateUnits())
             {
@@ -92,6 +98,49 @@ namespace TSIM
             DrawCrosshair(cr, center);
 
             Console.WriteLine("RenderFullView done");
+        }
+
+        private static void DrawLinks(INetworkDatabase ndb, Context cr, PointD center, double scale)
+        {
+            foreach (var link in ndb.EnumerateSegmentLinks())
+            {
+                var pos = ndb.GetSegmentById(link.Segment1).GetEndpoint(link.Ep1);
+
+                var c = aluminium6;
+                c.A = 0.1;
+                var pt = SimToCanvasSpace(new Vector3(pos.X, pos.Y, 0), center, scale);
+
+                cr.SetSourceColor(c);
+                cr.Arc(pt.X, pt.Y, 1, 0, 2*Math.PI);
+                cr.Fill();
+            }
+        }
+
+        private static void DrawQuadTreeNode(QuadTreeNode node, Context cr, PointD center, double scale)
+        {
+            var c = scarledRed1;
+
+            if (node.SegmentIds == null)
+            {
+                c.A = 0.1;
+            }
+
+            cr.SetSourceColor(c);
+            cr.LineWidth = 0.2;
+            cr.MoveTo(SimToCanvasSpace(new Vector3(node.BoundingMin.X, node.BoundingMin.Y, 0), center, scale));
+            cr.LineTo(SimToCanvasSpace(new Vector3(node.BoundingMax.X, node.BoundingMin.Y, 0), center, scale));
+            cr.LineTo(SimToCanvasSpace(new Vector3(node.BoundingMax.X, node.BoundingMax.Y, 0), center, scale));
+            cr.LineTo(SimToCanvasSpace(new Vector3(node.BoundingMin.X, node.BoundingMax.Y, 0), center, scale));
+            cr.LineTo(SimToCanvasSpace(new Vector3(node.BoundingMin.X, node.BoundingMin.Y, 0), center, scale));
+            cr.Stroke();
+
+            if (node.Quadrants != null)
+            {
+                foreach (var q in node.Quadrants)
+                {
+                    DrawQuadTreeNode(q, cr, center, scale);
+                }
+            }
         }
 
         public static void RenderSvg(SimulationCoordinateSpace coordinateSpace,

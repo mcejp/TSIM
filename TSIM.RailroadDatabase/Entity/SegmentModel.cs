@@ -1,7 +1,8 @@
-using System.Collections.Generic;
+using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics;
-using System.Linq;
+using System.Numerics;
 using TSIM.Model;
 
 namespace TSIM.RailroadDatabase.Entity
@@ -11,7 +12,9 @@ namespace TSIM.RailroadDatabase.Entity
     {
         public int Id { get; set; }
         public SegmentType Type { get; set; }
-        public ICollection<SegmentControlPoint> ControlPoints { get; set; }
+
+        [MaxLength(2*3*sizeof(float))]
+        public byte[] ControlPoints { get; set; }
 
         private SegmentModel()
         {
@@ -21,20 +24,30 @@ namespace TSIM.RailroadDatabase.Entity
         {
             Id = segment.Id;
             Type = segment.Type;
-            ControlPoints = new List<SegmentControlPoint>();
+            ControlPoints = new byte[segment.ControlPoints.Length * 3 * sizeof(float)];
 
-            foreach (var cp in segment.ControlPoints)
+            var arr = new float[3 * segment.ControlPoints.Length];
+
+            for (var i = 0; i < segment.ControlPoints.Length; i++)
             {
-                ControlPoints.Add(new Entity.SegmentControlPoint(cp));
+                segment.ControlPoints[i].CopyTo(arr, 3 * i);
             }
+
+            Buffer.BlockCopy(arr, 0, ControlPoints, 0, arr.Length * sizeof(float));
         }
 
         public Model.Segment ToModel()
         {
-            var cp = ControlPoints.ToArray();
+            var arr = new float[ControlPoints.Length / sizeof(float)];
+            Buffer.BlockCopy(ControlPoints, 0, arr, 0, arr.Length * sizeof(float));
 
-            Trace.Assert(cp.Length == 2);
-            return new Model.Segment(Id, Type, cp[0].ToVector3(), cp[1].ToVector3());
+            var cp = new Vector3[arr.Length / 3];
+            for (var i = 0; i < cp.Length; i++)
+            {
+                cp[i] = new Vector3(arr[3 * i + 0], arr[3 * i + 1], arr[3 * i + 2]);
+            }
+
+            return new Model.Segment(Id, Type, cp);
         }
     }
 }
