@@ -42,7 +42,7 @@ namespace TSIM
                                           PointD center,
                                           double scale)
         {
-            Console.WriteLine("RenderFullView start");
+            //Console.WriteLine("RenderFullView start");
 
             cr.SetSourceColor(aluminium1);
             cr.Paint();
@@ -51,7 +51,7 @@ namespace TSIM
 //            cr.ShowText($"Scale: full width = {(w / scale)} meters");
 
             // Draw quadtree
-            DrawQuadTreeNode(GeoJsonNetworkDatabase.StaticInstanceForDebug.GetQuadTreeForDebug().GetRootNodeForDebug(), cr, center, scale);
+            //DrawQuadTreeNode(GeoJsonNetworkDatabase.StaticInstanceForDebug.GetQuadTreeForDebug().GetRootNodeForDebug(), cr, center, scale);
 
             // Draw rail links
             DrawLinks(ndb, cr, center, scale);
@@ -96,7 +96,7 @@ namespace TSIM
 
             DrawCrosshair(cr, center);
 
-            Console.WriteLine("RenderFullView done");
+            //Console.WriteLine("RenderFullView done");
         }
 
         private static void DrawLinks(INetworkDatabase ndb, Context cr, PointD center, double scale)
@@ -158,8 +158,10 @@ namespace TSIM
 
             RenderToContext(coordinateSpace, ndb, units, cr, center, scale);
 
+            cr.Dispose();
             surf.Flush();
             surf.Finish();
+            surf.Dispose();
         }
 
         public static void RenderPng(SimulationCoordinateSpace coordinateSpace,
@@ -176,8 +178,10 @@ namespace TSIM
 
             RenderToContext(coordinateSpace, ndb, units, cr, center, scale);
 
+            cr.Dispose();
             surf.WriteToPng(filename);
             surf.Finish();
+            surf.Dispose();
         }
 
         private static void DrawCrosshair(Context cr, PointD pointD)

@@ -1,0 +1,37 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<img src='@Url.Action("DisplayViewAsImage", "Home")' class="auto-refresh" />
+
+<form>
+    <label>Unit 0 speed</label> <input type="number" id="unit-0-speed"/> <button type="button" id="unit-0-speed-set">set</button>
+</form>
+
+<script type="text/javascript">
+// code stolen from wherever
+
+function refreshCameras() {
+  $('img.auto-refresh').attr('src', function(i, old) { return old.replace(/\?.+/,"?i=" + (Math.random()*1000)); });
+  setTimeout(refreshCameras, 1000);
+}
+function refreshCamerasFirst() {
+  $('img.auto-refresh').attr('src', function(i, old) { return old + "?i=" + (Math.random()*1000); });
+  setTimeout(refreshCameras, 1000);
+}
+$(function() {
+    setTimeout(refreshCamerasFirst, 1000);
+
+    $('#unit-0-speed-set').click(() => {
+        const data = {'unit': 0, 'speed': Number.parseFloat($('#unit-0-speed').val())};
+        $.ajax({
+        type: "POST",
+        url:'@Url.Action("UnitSpeedSet", "Home")',
+        data: JSON.stringify(data),
+        contentType: 'application/json'
+        });
+    });
+});
+
+
+</script>
