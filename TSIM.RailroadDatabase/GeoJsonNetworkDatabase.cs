@@ -16,12 +16,8 @@ namespace TSIM.RailroadDatabase
 
         private QuadTree _quadTree;
 
-        public static GeoJsonNetworkDatabase StaticInstanceForDebug { get; private set; }
-
         public GeoJsonNetworkDatabase(SimulationCoordinateSpace coordinateSpace, string path)
         {
-            StaticInstanceForDebug = this;
-
             _coordinateSpace = coordinateSpace;
 
             int powerOf2 = 1024;
@@ -108,10 +104,7 @@ namespace TSIM.RailroadDatabase
             throw new NotImplementedException();
         }
 
-        public QuadTree GetQuadTree()
-        {
-            return _quadTree;
-        }
+        public QuadTree GetQuadTree() => _quadTree;
 
         public Segment GetSegmentById(int id)
         {
@@ -170,7 +163,5 @@ namespace TSIM.RailroadDatabase
 
             return maxCoordinate;
         }
-
-        public QuadTree GetQuadTreeForDebug() => _quadTree;
     }
 }

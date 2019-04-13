@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using TSIM.Model;
 
 namespace TSIM.RailroadDatabase.Entity
@@ -41,6 +43,26 @@ namespace TSIM.RailroadDatabase.Entity
             {
                 Segments = (from segmentId in node.SegmentIds select new QuadTreeReferencedSegment(segmentId)).ToList();
             }
+        }
+
+        public QuadTreeNode ToQuadTreeNode()
+        {
+           var node = new QuadTreeNode(new Vector3(BoundingMinX, BoundingMinY, BoundingMinZ), new Vector3(BoundingMaxX, BoundingMaxY, BoundingMaxZ));
+
+           if (Quadrants != null && Quadrants.Count > 0)
+           {
+               Trace.Assert(Quadrants.Count == 4);
+               Trace.Assert(Segments == null || Segments.Count == 0);
+               node.Quadrants = (from quadrant in Quadrants select quadrant.ToQuadTreeNode()).ToArray();
+           }
+
+           if (Segments != null && Segments.Count > 0)
+           {
+               Trace.Assert(Quadrants == null || Quadrants.Count == 0);
+               node.SegmentIds = (from seg in this.Segments select seg.SegmentId).ToList();
+           }
+
+           return node;
         }
     }
 }

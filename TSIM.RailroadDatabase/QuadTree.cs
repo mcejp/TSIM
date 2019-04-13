@@ -18,6 +18,12 @@ namespace TSIM.RailroadDatabase
             Root = new QuadTreeNode(boundsMin, boundsMax);
         }
 
+        public QuadTree(INetworkDatabase network, QuadTreeNode root)
+        {
+            _network = network;
+            Root = root;
+        }
+
         public void InsertSegment(Segment seg)
         {
             InsertSegmentUnchecked(Root, seg);
@@ -117,11 +123,6 @@ namespace TSIM.RailroadDatabase
                        node.BoundingMin.X, node.BoundingMax.Y)
                    || Utility.SegmentIntersectsLineSegment(segment, node.BoundingMax.X, node.BoundingMin.Y,
                        node.BoundingMax.X, node.BoundingMax.Y);
-        }
-
-        public QuadTreeNode GetRootNodeForDebug()
-        {
-            return Root;
         }
 
         public List<(Segment, SegmentEndpoint)> FindSegmentEndpointsNear(Vector3 point, float radius)

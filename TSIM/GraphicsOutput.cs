@@ -51,7 +51,7 @@ namespace TSIM
 //            cr.ShowText($"Scale: full width = {(w / scale)} meters");
 
             // Draw quadtree
-            //DrawQuadTreeNode(GeoJsonNetworkDatabase.StaticInstanceForDebug.GetQuadTreeForDebug().GetRootNodeForDebug(), cr, center, scale);
+            DrawQuadTreeNode(ndb.GetQuadTree().Root, cr, center, scale);
 
             // Draw rail links
             DrawLinks(ndb, cr, center, scale);

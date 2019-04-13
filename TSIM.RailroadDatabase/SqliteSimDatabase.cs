@@ -11,6 +11,7 @@ namespace TSIM.RailroadDatabase
     {
         private readonly MyContext db_;
         private Unit[] _units;
+        private QuadTree? _quadTree;
 
         private class MyContext : DbContext
         {
@@ -152,7 +153,14 @@ namespace TSIM.RailroadDatabase
 
         public QuadTree GetQuadTree()
         {
-            throw new NotImplementedException();
+            if (_quadTree == null)
+            {
+                // FIXME: super hack for finding the root while automagically wiring relations
+                var root = db_.QuadTreeNodes.Include(n => n.Segments).ToList().First();
+                _quadTree = new QuadTree(this, root.ToQuadTreeNode());
+            }
+
+            return _quadTree;
         }
 
         public ref Unit GetUnitByIndex(int unitIndex)
