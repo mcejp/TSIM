@@ -108,6 +108,11 @@ namespace TSIM.RailroadDatabase
             throw new NotImplementedException();
         }
 
+        public QuadTree GetQuadTree()
+        {
+            return _quadTree;
+        }
+
         public Segment GetSegmentById(int id)
         {
             return _segments[id - 1];

@@ -20,6 +20,8 @@ namespace TSIM.RailroadDatabase
             public DbSet<SegmentLink> SegmentLinks { get; set; }
             public DbSet<Entity.SimulationCoordinateSpace> SimulationCoordinateSpaces { get; set; }
             public DbSet<Entity.UnitModel> Units { get; set; }
+            public DbSet<Entity.QuadTreeNodeEntity> QuadTreeNodes { get; set; }
+            public DbSet<Entity.QuadTreeReferencedSegment> QuadTreeSegments { get; set; }
 
             public MyContext(string filename)
             {
@@ -148,6 +150,11 @@ namespace TSIM.RailroadDatabase
                 (l.Segment1 == segmentId && l.Ep1 == ep) || (l.Segment2 == segmentId && l.Ep2 == ep)).ToArray();
         }
 
+        public QuadTree GetQuadTree()
+        {
+            throw new NotImplementedException();
+        }
+
         public ref Unit GetUnitByIndex(int unitIndex)
         {
             EnsureUnitsLoaded();
@@ -160,6 +167,15 @@ namespace TSIM.RailroadDatabase
             EnsureUnitsLoaded();
 
             _units[unitIndex] = unit;
+        }
+
+        public void PutQuadTree(QuadTree quadTree)
+        {
+            // TODO: validate existence of all referenced segments
+            // TODO: ensure table is empty
+
+            db_.QuadTreeNodes.Add(new Entity.QuadTreeNodeEntity(quadTree.Root));
+            db_.SaveChanges();
         }
     }
 }

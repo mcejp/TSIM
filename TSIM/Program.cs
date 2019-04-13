@@ -35,6 +35,8 @@ namespace TSIM
             {
                 db.AddSegments(scenario.networkDatabase.EnumerateSegments());
                 db.AddSegmentLinks(scenario.networkDatabase.EnumerateSegmentLinks());
+                db.PutQuadTree(scenario.networkDatabase.GetQuadTree());
+
                 db.AddUnits(scenario.units);
             }
         }

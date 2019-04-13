@@ -10,5 +10,6 @@ namespace TSIM.RailroadDatabase
         IEnumerable<SegmentLink> EnumerateSegmentLinks();
         Segment GetSegmentById(int id);
         SegmentLink[] FindConnectingSegments(int segmentId, SegmentEndpoint ep);
+        QuadTree GetQuadTree();
     }
 }

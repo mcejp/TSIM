@@ -8,19 +8,19 @@ namespace TSIM.RailroadDatabase
     public class QuadTree
     {
         private readonly INetworkDatabase _network;
-        private readonly QuadTreeNode _root;
+        public QuadTreeNode Root { get; }
 
         private const int MaxSegmentsInLeaf = 10;
 
         public QuadTree(INetworkDatabase network, Vector3 boundsMin, Vector3 boundsMax)
         {
             _network = network;
-            _root = new QuadTreeNode(boundsMin, boundsMax);
+            Root = new QuadTreeNode(boundsMin, boundsMax);
         }
 
         public void InsertSegment(Segment seg)
         {
-            InsertSegmentUnchecked(_root, seg);
+            InsertSegmentUnchecked(Root, seg);
         }
 
         private void InsertSegment(QuadTreeNode node, Segment seg)
@@ -121,13 +121,13 @@ namespace TSIM.RailroadDatabase
 
         public QuadTreeNode GetRootNodeForDebug()
         {
-            return _root;
+            return Root;
         }
 
         public List<(Segment, SegmentEndpoint)> FindSegmentEndpointsNear(Vector3 point, float radius)
         {
             var list = new List<(Segment, SegmentEndpoint)>();
-            CollectNearbySegmentEndpoints(list, _root, point, radius);
+            CollectNearbySegmentEndpoints(list, Root, point, radius);
             return list;
         }
 
