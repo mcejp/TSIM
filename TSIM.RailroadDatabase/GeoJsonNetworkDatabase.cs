@@ -12,9 +12,9 @@ namespace TSIM.RailroadDatabase
     {
         private readonly SimulationCoordinateSpace _coordinateSpace;
         private readonly List<Segment> _segments = new List<Segment>();
-        private readonly List<SegmentLink> _segmentLinks = new List<SegmentLink>();
+        private readonly List<SegmentLink> _segmentLinks;
 
-        private readonly QuadTree _quadTree;
+        private QuadTree _quadTree;
 
         public static GeoJsonNetworkDatabase StaticInstanceForDebug { get; private set; }
 
@@ -31,7 +31,7 @@ namespace TSIM.RailroadDatabase
             {
                 var document = JsonDocument.Parse(file.BaseStream);
 
-                var maxCoordinate = ProcessFeatureCollection(document.RootElement, _segments, _segmentLinks);
+                var maxCoordinate = ProcessFeatureCollection(document.RootElement, _segments);
 
                 // Do you think I care??
                 while (powerOf2 < maxCoordinate)
@@ -40,13 +40,37 @@ namespace TSIM.RailroadDatabase
                 }
             }
 
-            // First-pass quad tree, remove duplicates
-            _quadTree = new QuadTree(this, new Vector3(-powerOf2, -powerOf2, 0), new Vector3(powerOf2, powerOf2, 0));
+            // First-pass: remove duplicates
+            var uniqueSegments = FindUniqueSegments(powerOf2);
+
+            // Second-pass: create segment links
+            _segments = uniqueSegments;
+            var quadTree = new QuadTree(this, new Vector3(-powerOf2, -powerOf2, 0), new Vector3(powerOf2, powerOf2, 0));
+
+            foreach (var seg in _segments)
+            {
+                quadTree.InsertSegment(seg);
+            }
+
+            var segmentLinks = new List<SegmentLink>();
+            NetworkImporterUtility.CreateSegmentLinks(_segments, segmentLinks, quadTree,
+                0.2f,
+                (float) (Math.PI * 0.25f)        // 45 degrees
+                );
+
+            _quadTree = quadTree;
+            _segmentLinks = segmentLinks;
+        }
+
+        private List<Segment> FindUniqueSegments(int maxAbsCoordinate)
+        {
+            var quadTree = new QuadTree(this, new Vector3(-maxAbsCoordinate, -maxAbsCoordinate, 0),
+                              new Vector3(maxAbsCoordinate, maxAbsCoordinate, 0));
             List<Segment> uniqueSegments = new List<Segment>();
 
             foreach (var seg in _segments)
             {
-                var candidates = _quadTree.FindSegmentEndpointsNear(seg.GetEndpoint(SegmentEndpoint.Start), 0.001f);
+                var candidates = quadTree.FindSegmentEndpointsNear(seg.GetEndpoint(SegmentEndpoint.Start), 0.001f);
 
                 bool match = false;
 
@@ -64,68 +88,17 @@ namespace TSIM.RailroadDatabase
                     continue;
                 }
 
-                _quadTree.InsertSegment(seg);
+                quadTree.InsertSegment(seg);
                 uniqueSegments.Add(new Segment(1 + uniqueSegments.Count, seg.Type, seg.ControlPoints));
             }
 
-            // Second-pass quad tree
-            _quadTree = new QuadTree(this, new Vector3(-powerOf2, -powerOf2, 0), new Vector3(powerOf2, powerOf2, 0));
-            _segments = uniqueSegments;
-
-            foreach (var seg in _segments)
-            {
-                _quadTree.InsertSegment(seg);
-            }
-
-            // Discover segment links
-            foreach (var seg in _segments)
-            {
-                const float range = 0.2f;
-                const float maxAngle = (float) (Math.PI * 0.25f);        // 45 degrees
-
-                // Check both endpoints for possible connections
-                AddLinksForSegmentEndpoint(seg, SegmentEndpoint.Start, range, maxAngle);
-                AddLinksForSegmentEndpoint(seg, SegmentEndpoint.End, range, maxAngle);
-            }
+            return uniqueSegments;
         }
 
-        private void AddLinksForSegmentEndpoint(Segment seg, SegmentEndpoint ep, float range, float maxAngle)
-        {
-            var point = seg.GetEndpoint(ep);
-
-            // Get a list of (segment, endpoint) tuples around point of interest
-            var candidates = FindSegmentEndpointsNear(point, range);
-
-            var maxCosine = Math.Cos(maxAngle);
-
-            foreach (var (candiSeg, candiEp) in candidates)
-            {
-                var linkId = 1 + _segmentLinks.Count;
-
-                // Only add if candidate ID precedes segment ID -- this prevents adding everything twice
-                // We're also not interested in cases where (seg1, ep1) == (seg2, ep2)
-                if (seg.Id < candiSeg.Id)
-                {
-                    // TODO: we could also check 1st-order continuity (tangent)
-
-                    var tangent1 = seg.GetEndpointTangent(ep, true);
-                    var tangent2 = candiSeg.GetEndpointTangent(candiEp, false);
-
-                    if (Vector3.Dot(tangent1, tangent2) < maxCosine)
-                    {
-                        // Reject pair of segments on basis of too great angle
-                        continue;
-                    }
-
-                    _segmentLinks.Add(new SegmentLink(linkId, seg.Id, ep, candiSeg.Id, candiEp));
-                }
-            }
-        }
-
-        private IEnumerable<(Segment seg, SegmentEndpoint ep)> FindSegmentEndpointsNear(Vector3 point, float radius)
-        {
-            return _quadTree.FindSegmentEndpointsNear(point, radius);
-        }
+//        private IEnumerable<(Segment seg, SegmentEndpoint ep)> FindSegmentEndpointsNear(Vector3 point, float radius)
+//        {
+//            return _quadTree.FindSegmentEndpointsNear(point, radius);
+//        }
 
         public IEnumerable<Segment> EnumerateSegments() => _segments;
         public IEnumerable<SegmentLink> EnumerateSegmentLinks() => _segmentLinks;
@@ -140,7 +113,7 @@ namespace TSIM.RailroadDatabase
             return _segments[id - 1];
         }
 
-        private float ProcessFeatureCollection(in JsonElement featureCollection, List<Segment> segments, List<SegmentLink> segmentLinks)
+        private float ProcessFeatureCollection(in JsonElement featureCollection, List<Segment> segments)
         {
             Trace.Assert(featureCollection.GetProperty("type").GetString().Equals("FeatureCollection"));
 
@@ -148,13 +121,13 @@ namespace TSIM.RailroadDatabase
 
             foreach (var feature in featureCollection.GetProperty("features").EnumerateArray())
             {
-                maxCoordinate = Math.Max(maxCoordinate, ProcessFeature(feature, segments, segmentLinks));
+                maxCoordinate = Math.Max(maxCoordinate, ProcessFeature(feature, segments));
             }
 
             return maxCoordinate;
         }
 
-        private float ProcessFeature(in JsonElement feature, List<Segment> segments, List<SegmentLink> segmentLinks)
+        private float ProcessFeature(in JsonElement feature, List<Segment> segments)
         {
             Trace.Assert(feature.GetProperty("type").GetString().Equals("Feature"));
 
