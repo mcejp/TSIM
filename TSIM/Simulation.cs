@@ -13,9 +13,9 @@ namespace TSIM
         public INetworkDatabase Network { get; private set; }
         public IUnitDatabase Units { get; private set; }
 
-        public int?[] currentSegmentByUnitId;
-        public SegmentEndpoint[] dirByUnitId;
-        public float[] tByUnitId;
+        private readonly int?[] _currentSegmentByUnitId;
+        private readonly SegmentEndpoint[] _dirByUnitId;
+        private readonly float[] _tByUnitId;
 
         public Simulation(SimulationCoordinateSpace coordSpace, INetworkDatabase network, IUnitDatabase units)
         {
@@ -23,15 +23,9 @@ namespace TSIM
             Network = network;
             Units = units;
 
-            // TODO: init currentSegmentByUnitId, tByUnitId
-            // rework as follows: iterate IUnitDb, calculate these from units
-            currentSegmentByUnitId = new int?[] {1};
-            dirByUnitId = new[] {SegmentEndpoint.Start};
-            tByUnitId = new float[] { 0.5f };
-
-            currentSegmentByUnitId = new int?[units.GetNumUnits()];
-            dirByUnitId = new SegmentEndpoint[units.GetNumUnits()];
-            tByUnitId = new float[units.GetNumUnits()];
+            _currentSegmentByUnitId = new int?[units.GetNumUnits()];
+            _dirByUnitId = new SegmentEndpoint[units.GetNumUnits()];
+            _tByUnitId = new float[units.GetNumUnits()];
 
             for (var unitIndex = 0; unitIndex < Units.GetNumUnits(); unitIndex++)
             {
@@ -43,14 +37,14 @@ namespace TSIM
                 {
                     Console.Error.WriteLine($"Simulation: could not snap unit {unitIndex} to railroad network!");
 
-                    currentSegmentByUnitId[unitIndex] = -1;
+                    _currentSegmentByUnitId[unitIndex] = -1;
                     continue;
                 }
 
                 var (segmentId, dir, t) = result.Value;
-                currentSegmentByUnitId[unitIndex] = segmentId;
-                dirByUnitId[unitIndex] = dir;
-                tByUnitId[unitIndex] = t;
+                _currentSegmentByUnitId[unitIndex] = segmentId;
+                _dirByUnitId[unitIndex] = dir;
+                _tByUnitId[unitIndex] = t;
             }
         }
 
@@ -65,10 +59,10 @@ namespace TSIM
                 var distanceToTravel = unit.Velocity.Length() * dt;
 
                 // Find out in which segment we are and how far along
-                var segId = currentSegmentByUnitId[unitIndex].Value;
+                var segId = _currentSegmentByUnitId[unitIndex].Value;
                 var seg = Network.GetSegmentById(segId);
-                var t = tByUnitId[unitIndex];
-                var dir = dirByUnitId[unitIndex];
+                var t = _tByUnitId[unitIndex];
+                var dir = _dirByUnitId[unitIndex];
 
                 while (distanceToTravel > Single.Epsilon)
                 {
@@ -160,9 +154,9 @@ namespace TSIM
                 unit.Orientation = Utility.DirectionVectorToQuaternion(headingDir);
 
                 Units.UpdateUnitByIndex(unitIndex, unit);
-                currentSegmentByUnitId[unitIndex] = segId;
-                dirByUnitId[unitIndex] = dir;
-                tByUnitId[unitIndex] = t;
+                _currentSegmentByUnitId[unitIndex] = segId;
+                _dirByUnitId[unitIndex] = dir;
+                _tByUnitId[unitIndex] = t;
 
 //                Console.WriteLine($"Unit {unitIndex} update: pos {unit.Pos} velocity {unit.Velocity}");
             }
