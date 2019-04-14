@@ -35,6 +35,7 @@ namespace TSIM
             {
                 db.AddSegments(scenario.networkDatabase.EnumerateSegments());
                 db.AddSegmentLinks(scenario.networkDatabase.EnumerateSegmentLinks());
+                db.AddStations(scenario.networkDatabase.EnumerateStations());
 
                 // This is super weird. GetQuadTree shouldn't be normally exposed. At the same time, we do not want
                 // to do duplicate work. Possible solutions:

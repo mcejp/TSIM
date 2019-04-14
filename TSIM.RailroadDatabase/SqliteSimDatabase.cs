@@ -23,6 +23,8 @@ namespace TSIM.RailroadDatabase
             public DbSet<SegmentLink> SegmentLinks { get; set; }
             public DbSet<Entity.SimulationCoordinateSpace> SimulationCoordinateSpaces { get; set; }
             public DbSet<Entity.UnitModel> Units { get; set; }
+            public DbSet<Entity.StationEntity> Stations { get; set; }
+            public DbSet<Entity.StationStopEntity> StationStops { get; set; }
             public DbSet<Entity.QuadTreeNodeEntity> QuadTreeNodes { get; set; }
             public DbSet<Entity.QuadTreeReferencedSegment> QuadTreeSegments { get; set; }
 
@@ -83,6 +85,12 @@ namespace TSIM.RailroadDatabase
             db_.SaveChanges();
         }
 
+        public void AddStations(IEnumerable<Station> stations)
+        {
+            db_.Stations.AddRange(from station in stations select new Entity.StationEntity(station));
+            db_.SaveChanges();
+        }
+
         // FIXME: this is hella wrong and out of sync with _units
         public void AddUnits(IEnumerable<Unit> units)
         {
@@ -103,6 +111,11 @@ namespace TSIM.RailroadDatabase
         public IEnumerable<SegmentLink> EnumerateSegmentLinks()
         {
             return db_.SegmentLinks;
+        }
+
+        public IEnumerable<Station> EnumerateStations()
+        {
+            throw new NotImplementedException();
         }
 
         public IEnumerable<Unit> EnumerateUnits()

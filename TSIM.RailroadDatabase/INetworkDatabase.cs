@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
 using TSIM.Model;
@@ -9,6 +8,7 @@ namespace TSIM.RailroadDatabase
     {
         IEnumerable<Segment> EnumerateSegments();
         IEnumerable<SegmentLink> EnumerateSegmentLinks();
+        IEnumerable<Station> EnumerateStations();
         Segment GetSegmentById(int id);
 
         SegmentLink[] FindConnectingSegments(int segmentId, SegmentEndpoint ep);
