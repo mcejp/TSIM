@@ -89,6 +89,13 @@ namespace TSIM.Model
             return (ControlPoints[1] - ControlPoints[0]).Length();
         }
 
+        public Vector3 GetPoint(float t)
+        {
+            Trace.Assert(ControlPoints.Length == 2);
+
+            return ControlPoints[0] * (1 - t) + ControlPoints[1] * t;
+        }
+
         public (Vector3, Vector3) GetPointAndTangent(float t, SegmentEndpoint direction)
         {
             Trace.Assert(ControlPoints.Length == 2);

@@ -115,7 +115,7 @@ namespace TSIM.RailroadDatabase
 
         public IEnumerable<Station> EnumerateStations()
         {
-            throw new NotImplementedException();
+            return from station in db_.Stations.Include(s => s.Stops) select station.ToModel();
         }
 
         public IEnumerable<Unit> EnumerateUnits()

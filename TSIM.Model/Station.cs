@@ -6,12 +6,12 @@ namespace TSIM.Model
     {
         public string Name { get; private set; }
 
-        public List<StationStop> Stops { get; set; }
+        public ICollection<StationStop> Stops { get; set; }
 
-        public Station(string name)
+        public Station(string name, IEnumerable<StationStop>? stops = null)
         {
             Name = name;
-            Stops = new List<StationStop>();
+            Stops = stops != null ? new HashSet<StationStop>(stops) : new HashSet<StationStop>();
         }
 
         public void CreateStationStop(int segmentId, float t)

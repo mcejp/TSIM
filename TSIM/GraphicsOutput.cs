@@ -14,7 +14,11 @@ namespace TSIM
         private static readonly Color scarledRed1 = FromHex("#ef2929");
         private static readonly Color plum1 = FromHex("#ad7fa8");
         private static readonly Color aluminium1 = FromHex("#eeeeec");
+        private static readonly Color aluminium2 = FromHex("#d3d7ef");
         private static readonly Color aluminium6 = FromHex("#2e3436");
+        private static readonly Color skyBlue1 = FromHex("#729fcf");
+        private static readonly Color skyBlue2 = FromHex("#3465a4");
+        private static readonly Color skyBlue3 = FromHex("#204a87");
 
         // https://stackoverflow.com/a/24213444
         private static Color FromHex(string hex)
@@ -75,6 +79,27 @@ namespace TSIM
                 cr.Stroke();
             }
 
+            // Draw stations
+            foreach (var station in ndb.EnumerateStations())
+            {
+                PointD pos0 = new PointD();
+                cr.SetSourceColor(skyBlue2);
+
+                foreach (var stop in station.Stops)
+                {
+                    var pos = ndb.GetSegmentById(stop.SegmentId).GetPoint(stop.T);
+
+                    var posCS = SimToCanvasSpace(pos, center, scale);
+                    pos0 = posCS;
+
+                    cr.LineWidth = 0.5;
+                    DrawCrosshair(cr, posCS, 5);
+                }
+
+                cr.SetSourceColor(aluminium2);
+                DrawTextBold(cr, station.Name, pos0);
+            }
+
             // Draw trains
             foreach (var unit in units.EnumerateUnits())
             {
@@ -90,17 +115,24 @@ namespace TSIM
                 cr.LineTo(headCS);
                 cr.Stroke();
 
-                var layout = Pango.CairoHelper.CreateLayout(cr);
-                layout.FontDescription = Pango.FontDescription.FromString("Arial Bold 7");
-                layout.SetText($"{unit.Class.Name}\n{unit.Velocity.Length() * 3.6:F1} km/h");
                 cr.SetSourceColor(chameleon3);
-                cr.MoveTo(posCS);
-                Pango.CairoHelper.ShowLayout(cr, layout);
+                DrawTextBold(cr, $"{unit.Class.Name}\n{unit.Velocity.Length() * 3.6:F1} km/h", posCS);
             }
 
-            DrawCrosshair(cr, center);
+            cr.LineWidth = 1;
+            cr.SetSourceColor(scarledRed1);
+            DrawCrosshair(cr, center, 10);
 
             //Console.WriteLine("RenderFullView done");
+        }
+
+        private static void DrawTextBold(Context cr, string text, PointD pos)
+        {
+            var layout = Pango.CairoHelper.CreateLayout(cr);
+            layout.FontDescription = Pango.FontDescription.FromString("Arial Bold 7");
+            layout.SetText(text);
+            cr.MoveTo(pos);
+            Pango.CairoHelper.ShowLayout(cr, layout);
         }
 
         private static void DrawLinks(INetworkDatabase ndb, Context cr, PointD center, double scale)
@@ -188,19 +220,17 @@ namespace TSIM
             surf.Dispose();
         }
 
-        private static void DrawCrosshair(Context cr, PointD pointD)
+        private static void DrawCrosshair(Context cr, PointD pointD, int radius)
         {
             cr.Save();
-            cr.SetSourceColor(scarledRed1);
-            cr.LineWidth = 1;
 
             cr.MoveTo(pointD);
-            cr.RelMoveTo(-10, 0);
-            cr.RelLineTo(20, 0);
+            cr.RelMoveTo(-radius, 0);
+            cr.RelLineTo(2 * radius, 0);
             cr.Stroke();
             cr.MoveTo(pointD);
-            cr.RelMoveTo(0, -10);
-            cr.RelLineTo(0, 20);
+            cr.RelMoveTo(0, -radius);
+            cr.RelLineTo(0, 2 * radius);
             cr.Stroke();
 
             cr.Restore();

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using TSIM.Model;
 
 namespace TSIM.RailroadDatabase.Entity
@@ -13,7 +14,7 @@ namespace TSIM.RailroadDatabase.Entity
         public string Name { get; set; }
 
         [ForeignKey("StationId")]
-        public List<StationStopEntity> Stops { get; set; }
+        public ICollection<StationStopEntity> Stops { get; set; }
 
         public StationEntity()
         {
@@ -22,12 +23,17 @@ namespace TSIM.RailroadDatabase.Entity
         public StationEntity(Station station)
         {
             Name = station.Name;
-            Stops = new List<StationStopEntity>(station.Stops.Count);
+            Stops = new HashSet<StationStopEntity>(station.Stops.Count);
 
             foreach (var stop in station.Stops)
             {
                 Stops.Add(new StationStopEntity(stop));
             }
+        }
+
+        public Station ToModel()
+        {
+            return new Station(Name, from stop in Stops select stop.ToModel());
         }
     }
 
@@ -48,6 +54,11 @@ namespace TSIM.RailroadDatabase.Entity
         {
             SegmentId = stop.SegmentId;
             T = stop.T;
+        }
+
+        public StationStop ToModel()
+        {
+            return new StationStop(SegmentId, T);
         }
     }
 }
