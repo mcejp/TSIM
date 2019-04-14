@@ -24,6 +24,40 @@ namespace TSIM.Model
             ControlPoints = controlPoints;
         }
 
+        public (Vector3 closest, float t) GetClosestPointOnSegmentToPoint(Vector3 point)
+        {
+            Trace.Assert(ControlPoints.Length == 2);
+
+            // To find the closest point, intersect the line with its normal going through the point, and then clamp
+            // calculated t to <0, 1>
+
+            // Adapted from https://stackoverflow.com/a/9557244
+
+            var A = ControlPoints[0];
+            var B = ControlPoints[1];
+            var P = point;
+
+            Vector3 AP = P - A;       //Vector from A to P
+            Vector3 AB = B - A;       //Vector from A to B
+
+            float magnitudeAB = AB.LengthSquared();     //Magnitude of AB vector (it's length squared)
+            float ABAPproduct = Vector3.Dot(AP, AB);    //The DOT product of a_to_p and a_to_b
+            float t = ABAPproduct / magnitudeAB; //The normalized "distance" from a to your closest point
+
+            if (t < 0)     //Check if P projection is over vectorAB
+            {
+                return (A, 0);
+            }
+            else if (t > 1)
+            {
+                return (B, 1);
+            }
+            else
+            {
+                return (A + AB * t, t);
+            }
+        }
+
         public Vector3 GetEndpoint(SegmentEndpoint ep)
         {
             return ep switch {

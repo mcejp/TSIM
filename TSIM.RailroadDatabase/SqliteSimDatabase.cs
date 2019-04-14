@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using Microsoft.EntityFrameworkCore;
 using TSIM.Model;
 
 namespace TSIM.RailroadDatabase
 {
+    // This generalizes to other EF back-ends, not just sqlite.
     public class SqliteSimDatabase : IDisposable, INetworkDatabase, IUnitDatabase
     {
         private readonly MyContext db_;
@@ -132,14 +134,6 @@ namespace TSIM.RailroadDatabase
             _units[id] = u;
         }
 
-        private void EnsureUnitsLoaded()
-        {
-            if (_units == null)
-            {
-                _units = db_.Units.Include(u => u.Class).Select(unit => unit.ToModel()).ToArray();
-            }
-        }
-
         public Segment GetSegmentById(int id)
         {
             return db_.Segments.First(s => s.Id == id).ToModel();
@@ -151,16 +145,44 @@ namespace TSIM.RailroadDatabase
                 (l.Segment1 == segmentId && l.Ep1 == ep) || (l.Segment2 == segmentId && l.Ep2 == ep)).ToArray();
         }
 
-        public QuadTree GetQuadTree()
+        public QuadTree? GetQuadTreeIfYouHaveOne()
         {
-            if (_quadTree == null)
-            {
-                // FIXME: super hack for finding the root while automagically wiring relations
-                var root = db_.QuadTreeNodes.Include(n => n.Segments).ToList().First();
-                _quadTree = new QuadTree(this, root.ToQuadTreeNode());
-            }
+            EnsureQuadTreeLoaded();
 
             return _quadTree;
+        }
+
+        public (int segmentId, SegmentEndpoint dir, float t)? FindSegmentAt(Vector3 position, Quaternion orientation,
+            float radius, float maxAngle)
+        {
+            EnsureQuadTreeLoaded();
+
+            // TODO: this algorithm is not Sqlite-specific and thus has no business sitting here.
+            //       It should be in like QuadTreeUtility.
+
+            var candidates = _quadTree.FindSegmentsNear(position, radius);
+
+            var minCosine = Math.Cos(maxAngle);
+            var expectedDirection = Utility.QuaternionToDirectionVector(orientation);
+
+            foreach (var (seg, t) in candidates)
+            {
+                // Get the tangent for start->end and make use of the fact that for the opposite direction it will be simply negated
+                var (_, tangent) = seg.GetPointAndTangent(t, SegmentEndpoint.End);
+
+                // Check if the track tangent aligns with the expected orientation. And just return the first matching result.
+                // (We could look for the closest match or something, but why bother?)
+                if (Vector3.Dot(tangent, expectedDirection) >= minCosine)
+                {
+                    return (seg.Id, SegmentEndpoint.End, t);
+                }
+                else if (Vector3.Dot(-tangent, expectedDirection) >= minCosine)
+                {
+                    return (seg.Id, SegmentEndpoint.Start, t);
+                }
+            }
+
+            return null;
         }
 
         public ref Unit GetUnitByIndex(int unitIndex)
@@ -184,6 +206,24 @@ namespace TSIM.RailroadDatabase
 
             db_.QuadTreeNodes.Add(new Entity.QuadTreeNodeEntity(quadTree.Root));
             db_.SaveChanges();
+        }
+
+        private void EnsureQuadTreeLoaded()
+        {
+            if (_quadTree == null)
+            {
+                // FIXME: super hack for finding the root while automagically wiring relations
+                var root = db_.QuadTreeNodes.Include(n => n.Segments).ToList().First();
+                _quadTree = new QuadTree(this, root.ToQuadTreeNode());
+            }
+        }
+
+        private void EnsureUnitsLoaded()
+        {
+            if (_units == null)
+            {
+                _units = db_.Units.Include(u => u.Class).Select(unit => unit.ToModel()).ToArray();
+            }
         }
     }
 }

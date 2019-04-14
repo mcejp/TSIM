@@ -51,7 +51,11 @@ namespace TSIM
 //            cr.ShowText($"Scale: full width = {(w / scale)} meters");
 
             // Draw quadtree
-            DrawQuadTreeNode(ndb.GetQuadTree().Root, cr, center, scale);
+            var maybeQuadTree = ndb.GetQuadTreeIfYouHaveOne();
+            if (maybeQuadTree is {} quadTree)
+            {
+                DrawQuadTreeNode(quadTree.Root, cr, center, scale);
+            }
 
             // Draw rail links
             DrawLinks(ndb, cr, center, scale);

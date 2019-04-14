@@ -9,11 +9,11 @@ namespace TSIM.Model
         public Vector3 Velocity;
         public Quaternion Orientation;
 
-        public Unit(UnitClass class_, Vector3 pos, Quaternion orientation)
+        public Unit(UnitClass class_, Vector3 pos, Vector3 velocity, Quaternion orientation)
         {
             Class = class_;
             Pos = pos;
-            Velocity = Vector3.Zero;
+            Velocity = velocity;
             Orientation = orientation;
         }
     }

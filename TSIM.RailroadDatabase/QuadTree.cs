@@ -127,15 +127,24 @@ namespace TSIM.RailroadDatabase
 
         public List<(Segment, SegmentEndpoint)> FindSegmentEndpointsNear(Vector3 point, float radius)
         {
+            // TODO: does this guarantee no duplicate results?
+
             var list = new List<(Segment, SegmentEndpoint)>();
             CollectNearbySegmentEndpoints(list, Root, point, radius);
             return list;
         }
 
+        public HashSet<(Segment, float)> FindSegmentsNear(Vector3 point, float radius)
+        {
+            var collection = new HashSet<(Segment, float)>();
+            CollectNearbySegments(collection, Root, point, radius);
+            return collection;
+        }
+
         private void CollectNearbySegmentEndpoints(List<(Segment, SegmentEndpoint)> list, QuadTreeNode node, Vector3 point, float radius)
         {
-            // Is this node even a candidate?
-
+            // Because of the radius of tolerance, there might be results in this node even if the point lies outside
+            // (but no further than the radius)
             if (Utility.DistancePointRectangle(point.X, point.Y, node.BoundingMin.X, node.BoundingMin.Y,
                     node.BoundingMax.X, node.BoundingMax.Y) > radius)
             {
@@ -163,6 +172,39 @@ namespace TSIM.RailroadDatabase
                     if ((seg.GetEndpoint(SegmentEndpoint.End) - point).Length() < radius)
                     {
                         list.Add((seg, SegmentEndpoint.End));
+                    }
+                }
+            }
+        }
+
+        private void CollectNearbySegments(ICollection<(Segment, float)> list, QuadTreeNode node, Vector3 point, float radius)
+        {
+            // Because of the radius of tolerance, there might be results in this node even if the point lies outside
+            // (but no further than the radius)
+            if (Utility.DistancePointRectangle(point.X, point.Y, node.BoundingMin.X, node.BoundingMin.Y,
+                    node.BoundingMax.X, node.BoundingMax.Y) > radius)
+            {
+                return;
+            }
+
+            if (node.Quadrants != null)
+            {
+                for (var i = 0; i < 4; i++)
+                {
+                    CollectNearbySegments(list, node.Quadrants[i], point, radius);
+                }
+            }
+            else if (node.SegmentIds != null)
+            {
+                foreach (var segId in node.SegmentIds)
+                {
+                    var seg = _network.GetSegmentById(segId);
+
+                    var (closest, t) = seg.GetClosestPointOnSegmentToPoint(point);
+
+                    if ((closest - point).Length() < radius)
+                    {
+                        list.Add((seg, t));
                     }
                 }
             }

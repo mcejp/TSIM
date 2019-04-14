@@ -35,7 +35,13 @@ namespace TSIM
             {
                 db.AddSegments(scenario.networkDatabase.EnumerateSegments());
                 db.AddSegmentLinks(scenario.networkDatabase.EnumerateSegmentLinks());
-                db.PutQuadTree(scenario.networkDatabase.GetQuadTree());
+
+                // This is super weird. GetQuadTree shouldn't be normally exposed. At the same time, we do not want
+                // to do duplicate work. Possible solutions:
+                //  - do not expose the methods on the interface, but do so on the implementation (but then we're bound to a specific impl)
+                //  - move the processing from GeoJsonDatabase's constructor to NetworkImportUtility so that code
+                //    doesn't have to be repeated
+                db.PutQuadTree(((GeoJsonNetworkDatabase)scenario.networkDatabase).GetQuadTree());
 
                 db.AddUnits(scenario.units);
             }

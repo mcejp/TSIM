@@ -105,6 +105,13 @@ namespace TSIM.RailroadDatabase
         }
 
         public QuadTree GetQuadTree() => _quadTree;
+        public QuadTree? GetQuadTreeIfYouHaveOne() => _quadTree;
+
+        public (int segmentId, SegmentEndpoint dir, float t)? FindSegmentAt(Vector3 position, Quaternion orientation,
+            float radius, float maxAngle)
+        {
+            throw new NotImplementedException();
+        }
 
         public Segment GetSegmentById(int id)
         {

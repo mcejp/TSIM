@@ -24,9 +24,34 @@ namespace TSIM
             Units = units;
 
             // TODO: init currentSegmentByUnitId, tByUnitId
+            // rework as follows: iterate IUnitDb, calculate these from units
             currentSegmentByUnitId = new int?[] {1};
-            dirByUnitId = new SegmentEndpoint[] {SegmentEndpoint.Start};
+            dirByUnitId = new[] {SegmentEndpoint.Start};
             tByUnitId = new float[] { 0.5f };
+
+            currentSegmentByUnitId = new int?[units.GetNumUnits()];
+            dirByUnitId = new SegmentEndpoint[units.GetNumUnits()];
+            tByUnitId = new float[units.GetNumUnits()];
+
+            for (var unitIndex = 0; unitIndex < Units.GetNumUnits(); unitIndex++)
+            {
+                var unit = Units.GetUnitByIndex(unitIndex);
+
+                var result = Network.FindSegmentAt(unit.Pos, unit.Orientation, 0.2f, (float) (Math.PI * 0.25));
+
+                if (result == null)
+                {
+                    Console.Error.WriteLine($"Simulation: could not snap unit {unitIndex} to railroad network!");
+
+                    currentSegmentByUnitId[unitIndex] = -1;
+                    continue;
+                }
+
+                var (segmentId, dir, t) = result.Value;
+                currentSegmentByUnitId[unitIndex] = segmentId;
+                dirByUnitId[unitIndex] = dir;
+                tByUnitId[unitIndex] = t;
+            }
         }
 
         public void Step(double dt)

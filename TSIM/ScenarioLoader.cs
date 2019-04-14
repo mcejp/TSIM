@@ -1,6 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Numerics;
 using System.Text.Json;
 using TSIM.Model;
 using TSIM.RailroadDatabase;
@@ -43,10 +44,15 @@ namespace TSIM
 
                 foreach (var unitDesc in desc.Units)
                 {
+                    var rand = new Random();
+
+                    // randomly pick a segment
+                    var seg = networkDatabase.GetSegmentById(rand.Next(1, 600));
+
                     var class_ = unitClassDatabase.UnitClassByName(unitDesc.Class);
-                    var (pos, dir) = networkDatabase.EnumerateSegments().First().GetPointAndTangent(0.5f, SegmentEndpoint.Start);
+                    var (pos, dir) = seg.GetPointAndTangent(0.5f, SegmentEndpoint.Start);
                     var orientation = Utility.DirectionVectorToQuaternion(dir);
-                    units.Add(new Unit(class_, pos, orientation));
+                    units.Add(new Unit(class_, pos, Vector3.Transform(new Vector3(20, 0, 0), orientation), orientation));
                 }
 
                 return (coordinateSpace, networkDatabase, unitClassDatabase, units);

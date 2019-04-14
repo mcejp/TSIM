@@ -3,8 +3,14 @@
   "networkDatabase": "DOP_PID_TRASY_L.json",
   "unitClassDatabase": "classes.json",
   "units": [
-    {
-      "class": "generic"
-    }
+    {"class": "generic"},
+    {"class": "generic"},
+    {"class": "generic"},
+    {"class": "generic"},
+    {"class": "generic"},
+    {"class": "generic"},
+    {"class": "generic"},
+    {"class": "generic"},
+    {"class": "generic"}
   ]
 }
