@@ -40,11 +40,11 @@ namespace TSIM
         }
 
         private static void RenderToContext(SimulationCoordinateSpace coordinateSpace,
-                                          INetworkDatabase ndb,
-                                          IUnitDatabase units,
-                                          Context cr,
-                                          PointD center,
-                                          double scale)
+            INetworkDatabase ndb,
+            IUnitDatabase units,
+            Context cr,
+            PointD center,
+            double scale, int fontSize)
         {
             //Console.WriteLine("RenderFullView start");
 
@@ -97,7 +97,7 @@ namespace TSIM
                 }
 
                 cr.SetSourceColor(aluminium2);
-                DrawTextBold(cr, station.Name, pos0);
+                DrawTextRegular(cr, station.Name, pos0, fontSize);
             }
 
             // Draw trains
@@ -116,7 +116,7 @@ namespace TSIM
                 cr.Stroke();
 
                 cr.SetSourceColor(chameleon3);
-                DrawTextBold(cr, $"{unit.Class.Name}\n{unit.Velocity.Length() * 3.6:F1} km/h", posCS);
+                DrawTextBold(cr, $"{unit.Class.Name}\n{unit.Velocity.Length() * 3.6:F1} km/h", posCS, fontSize);
             }
 
             cr.LineWidth = 1;
@@ -126,10 +126,19 @@ namespace TSIM
             //Console.WriteLine("RenderFullView done");
         }
 
-        private static void DrawTextBold(Context cr, string text, PointD pos)
+        private static void DrawTextBold(Context cr, string text, PointD pos, int fontSize)
         {
             var layout = Pango.CairoHelper.CreateLayout(cr);
-            layout.FontDescription = Pango.FontDescription.FromString("Arial Bold 7");
+            layout.FontDescription = Pango.FontDescription.FromString("DejaVu Sans Bold " + fontSize);
+            layout.SetText(text);
+            cr.MoveTo(pos);
+            Pango.CairoHelper.ShowLayout(cr, layout);
+        }
+
+        private static void DrawTextRegular(Context cr, string text, PointD pos, int fontSize)
+        {
+            var layout = Pango.CairoHelper.CreateLayout(cr);
+            layout.FontDescription = Pango.FontDescription.FromString("DejaVu Sans " + fontSize);
             layout.SetText(text);
             cr.MoveTo(pos);
             Pango.CairoHelper.ShowLayout(cr, layout);
@@ -186,13 +195,14 @@ namespace TSIM
             var w = 1000;
             var h = 600;
             var scale = 0.04;        // meters/pixel
+            var fontSize = 8;
 
             var center = new PointD(w/2, h/2);
 
             var surf = new SvgSurface(filename, w, h);
             Context cr = new Context(surf);
 
-            RenderToContext(coordinateSpace, ndb, units, cr, center, scale);
+            RenderToContext(coordinateSpace, ndb, units, cr, center, scale, fontSize);
 
             cr.Dispose();
             surf.Flush();
@@ -205,14 +215,14 @@ namespace TSIM
             IUnitDatabase units,
             string filename,
             int w, int h,
-            double scale)
+            double scale, int fontSize)
         {
             var center = new PointD(w/2, h/2);
 
             var surf = new ImageSurface(Format.Argb32, w, h);
             Context cr = new Context(surf);
 
-            RenderToContext(coordinateSpace, ndb, units, cr, center, scale);
+            RenderToContext(coordinateSpace, ndb, units, cr, center, scale, fontSize);
 
             cr.Dispose();
             surf.WriteToPng(filename);

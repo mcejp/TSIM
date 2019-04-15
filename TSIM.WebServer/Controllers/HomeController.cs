@@ -33,10 +33,11 @@ namespace TSIM.WebServer.Controllers
             lock (sim)
             {
                 var filename = "/tmp/tmp.png";
-                var w = 1110;
-                var h = 800;
-                var scale = 0.04;
-                GraphicsOutput.RenderPng(sim.CoordSpace, sim.Network, sim.Units, filename, w, h, scale);
+                var w = 1600;
+                var h = 1000;
+                var scale = 0.070;
+                var fontSize = 9;
+                GraphicsOutput.RenderPng(sim.CoordSpace, sim.Network, sim.Units, filename, w, h, scale, fontSize);
 
                 byte[] filedata = System.IO.File.ReadAllBytes(filename);
                 string contentType = "image/png";
