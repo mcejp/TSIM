@@ -15,13 +15,13 @@ namespace TSIM
             var db = SqliteSimDatabase.Open(dbPath);
 
             // 2. simulate
-            var sim = new Simulation(db.GetCoordinateSpace(), db, db);
-            sim.Units.SetUnitSpeed(0, 50 / 3.6f);
-
-            for (var i = 0; i < 50; i++)
-            {
-                sim.Step(1.0f);
-            }
+//            var sim = new Simulation(db.GetCoordinateSpace(), db, db);
+//            sim.Units.SetUnitSpeed(0, 50 / 3.6f);
+//
+//            for (var i = 0; i < 50; i++)
+//            {
+//                sim.Step(1.0f);
+//            }
 
             // 3. render 2D/3D view
             GraphicsOutput.RenderSvg(db.GetCoordinateSpace(), db, db, "output.svg");

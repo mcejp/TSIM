@@ -52,7 +52,7 @@ namespace TSIM
                     var class_ = unitClassDatabase.UnitClassByName(unitDesc.Class);
                     var (pos, dir) = seg.GetPointAndTangent(0.5f, SegmentEndpoint.Start);
                     var orientation = Utility.DirectionVectorToQuaternion(dir);
-                    units.Add(new Unit(class_, pos, Vector3.Transform(new Vector3(20, 0, 0), orientation), orientation));
+                    units.Add(new Unit(class_, pos, Vector3.Zero, orientation));
                 }
 
                 return (coordinateSpace, networkDatabase, unitClassDatabase, units);

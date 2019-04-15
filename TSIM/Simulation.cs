@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using TSIM.Model;
 using TSIM.RailroadDatabase;
@@ -16,6 +17,8 @@ namespace TSIM
         private readonly int?[] _currentSegmentByUnitId;
         private readonly SegmentEndpoint[] _dirByUnitId;
         private readonly float[] _tByUnitId;
+
+        private List<IAgent> _agents = new List<IAgent>();
 
         public Simulation(SimulationCoordinateSpace coordSpace, INetworkDatabase network, IUnitDatabase units)
         {
@@ -36,8 +39,6 @@ namespace TSIM
                 if (result == null)
                 {
                     Console.Error.WriteLine($"Simulation: could not snap unit {unitIndex} to railroad network!");
-
-                    _currentSegmentByUnitId[unitIndex] = -1;
                     continue;
                 }
 
@@ -48,15 +49,39 @@ namespace TSIM
             }
         }
 
+        public void AddAgent(IAgent agent)
+        {
+            _agents.Add(agent);
+        }
+
+        public (int segmentId, float t, SegmentEndpoint dir) GetUnitTrackState(int unitIndex) =>
+            (_currentSegmentByUnitId[unitIndex].Value, _tByUnitId[unitIndex], _dirByUnitId[unitIndex]);
+
         public void Step(double dt)
         {
+            // TODO: do not use Unit.Velocity as authoritative; because we're doing on-rails simulation only
+            // (at least for now), it would be more efficient to track scalar speed
+
+            var forceByUnitIndex = new float[Units.GetNumUnits()];
+
+            foreach (var agent in _agents)
+            {
+                var (unitIndex, force) = agent.Step(this, dt);
+
+                forceByUnitIndex[unitIndex] = force;
+            }
+
             for (var unitIndex = 0; unitIndex < Units.GetNumUnits(); unitIndex++)
             {
                 var unit = Units.GetUnitByIndex(unitIndex);
+                var speed = unit.Velocity.Length();
+
+                // Calculate new unit speed based on force
+                var newSpeed = speed + forceByUnitIndex[unitIndex] / unit.Class.Mass;
 
                 // Update unit position based on velocity
                 // If unit is on rail, it should stay snapped
-                var distanceToTravel = unit.Velocity.Length() * dt;
+                var distanceToTravel = (speed + newSpeed) * 0.5f * dt;
 
                 // Find out in which segment we are and how far along
                 var segId = _currentSegmentByUnitId[unitIndex].Value;
@@ -150,7 +175,7 @@ namespace TSIM
 
                 var (pos, headingDir) = seg.GetPointAndTangent(t, dir);
                 unit.Pos = pos;
-                unit.Velocity = headingDir * unit.Velocity.Length();
+                unit.Velocity = headingDir * newSpeed;
                 unit.Orientation = Utility.DirectionVectorToQuaternion(headingDir);
 
                 Units.UpdateUnitByIndex(unitIndex, unit);
