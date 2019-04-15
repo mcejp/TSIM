@@ -113,6 +113,12 @@ namespace TSIM.RailroadDatabase
             throw new NotImplementedException();
         }
 
+        public (Station station, StationStop stop, float distance, TrajectorySegment[] plan)? FindNearestStationAlongTrack(int segmentId, float t,
+            SegmentEndpoint dir)
+        {
+            throw new NotImplementedException();
+        }
+
         public QuadTree GetQuadTree() => _quadTree;
         public QuadTree? GetQuadTreeIfYouHaveOne() => _quadTree;
 

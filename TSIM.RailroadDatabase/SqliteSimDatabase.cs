@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -156,6 +157,154 @@ namespace TSIM.RailroadDatabase
         {
             return db_.SegmentLinks.Where(l =>
                 (l.Segment1 == segmentId && l.Ep1 == ep) || (l.Segment2 == segmentId && l.Ep2 == ep)).ToArray();
+        }
+
+        public (Station station, StationStop stop, float distance, TrajectorySegment[] plan)? FindNearestStationAlongTrack(
+            int segmentId, float t, SegmentEndpoint dir)
+        {
+            // Queue of tuples (segmentId, t(entry), dir) for breath-first search
+            var backlog = new Queue<(int, float, SegmentEndpoint, float, TrajectorySegment)>();
+            backlog.Enqueue((segmentId, t, dir, 0, null));
+            //new TrajectorySegment(null, segmentId, dir, 0, 0)
+
+            (Station station, StationStop stop, float distance, TrajectorySegment plan)? best = null;
+
+            while (backlog.Count > 0)
+            {
+                float distance;
+                TrajectorySegment predecessor;
+                (segmentId, t, dir, distance, predecessor) = backlog.Dequeue();
+
+                var found = SearchNearestStationAlongTrack(segmentId, t, dir, distance, best?.distance, backlog, predecessor);
+
+                if (found != null)
+                {
+                    best = found;
+                }
+            }
+
+            if (best == null)
+            {
+                return null;
+            }
+
+            // Compute the plan
+            List<TrajectorySegment> plan = new List<TrajectorySegment>();
+
+            var (station, stop, distance1, head) = best.Value;
+
+            while (head != null)
+            {
+                head.DistToGoalAtEntry = distance1 - head.DistToGoalAtEntry;
+                head.DistToGoalAtExit = distance1 - head.DistToGoalAtExit;
+                plan.Insert(0, head);
+                head = head.Prev;
+            }
+
+//            Console.WriteLine("PRINTING HET PLAAN:");
+//
+//            foreach (var node in plan)
+//            {
+//                Console.WriteLine($"  - {node}");
+//            }
+
+            return (station, stop, distance1, plan.ToArray());
+        }
+
+        private (Station station, StationStop stop, float distance, TrajectorySegment plan)? SearchNearestStationAlongTrack(int segmentId, float t,
+            SegmentEndpoint dir, float distance, float? currentBest, Queue<(int, float, SegmentEndpoint, float, TrajectorySegment)> backlog,
+            TrajectorySegment predecessor)
+        {
+            var seg = GetSegmentById(segmentId);
+
+            // Look for stops in this segment
+            var stops = db_.StationStops.Where(s => s.SegmentId == segmentId).Include(s => s.Station);
+
+            (Station station, StationStop stop, float distance, TrajectorySegment plan)? best = null;
+
+            foreach (var stop in stops)
+            {
+                // Is the stop downstream from here?
+
+                float stopDistance;
+
+                if (dir == SegmentEndpoint.End)
+                {
+                    if (stop.T > t)
+                    {
+                        stopDistance = distance + seg.GetLength() * (stop.T - t);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                else
+                {
+                    if (stop.T < t)
+                    {
+                        stopDistance = distance + seg.GetLength() * (t - stop.T);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+
+                if (currentBest == null || stopDistance < currentBest)
+                {
+                    currentBest = stopDistance;
+                    // FIXME: shite shite shite aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                    best = (stop.Station.ToModel(), stop.ToModel(), stopDistance,
+                        new TrajectorySegment(predecessor, segmentId, dir, distance, stopDistance));
+                }
+            }
+
+            if (best != null)
+            {
+                return best;
+            }
+
+            // Reached end of segment. Look forward
+            var distanceAtEnd = dir switch {
+                SegmentEndpoint.End => distance + seg.GetLength() * (1 - t),
+                SegmentEndpoint.Start => distance + seg.GetLength() * t
+                };
+
+            if (currentBest.HasValue && currentBest.Value < distanceAtEnd)
+            {
+                return null;
+            }
+
+            var candidates = FindConnectingSegments(segmentId, dir);
+
+            foreach (var candidate in candidates)
+            {
+                if (candidate.Segment1 == segmentId && candidate.Ep1 == dir)
+                {
+                    backlog.Enqueue((candidate.Segment2,
+                            candidate.Ep2 == SegmentEndpoint.Start ? 0 : 1,
+                            candidate.Ep2.Other(),
+                            distanceAtEnd,
+                            new TrajectorySegment(predecessor, segmentId, dir, distance, distanceAtEnd)
+                        ));
+                }
+                else if (candidate.Segment2 == segmentId && candidate.Ep2 == dir)
+                {
+                    backlog.Enqueue((candidate.Segment1,
+                            candidate.Ep1 == SegmentEndpoint.Start ? 0 : 1,
+                            candidate.Ep1.Other(),
+                            distanceAtEnd,
+                            new TrajectorySegment(predecessor, segmentId, dir, distance, distanceAtEnd)
+                        ));
+                }
+                else
+                {
+                    Trace.Assert(false);
+                }
+            }
+
+            return null;
         }
 
         public QuadTree? GetQuadTreeIfYouHaveOne()

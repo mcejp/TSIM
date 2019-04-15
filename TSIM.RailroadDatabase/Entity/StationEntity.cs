@@ -46,6 +46,8 @@ namespace TSIM.RailroadDatabase.Entity
 
         public float T { get; set; }
 
+        public StationEntity Station { get; set; }
+
         public StationStopEntity()
         {
         }

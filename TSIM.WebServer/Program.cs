@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore;
@@ -26,6 +26,12 @@ namespace TSIM.WebServer
             // 2. simulate
             var sim = new Simulation(db.GetCoordinateSpace(), db, db);
 
+            // 3. add agents
+            for (int unitIndex = 0; unitIndex < db.GetNumUnits(); unitIndex++)
+            {
+                sim.AddAgent(new StationToStationAgent(db, db, unitIndex, unitIndex == 0));
+            }
+
             uglyGlobalSimulation = sim;
             Task.Run(() => Simulate(sim));
 
@@ -35,7 +41,7 @@ namespace TSIM.WebServer
 
         private static void Simulate(Simulation sim)
         {
-            const int simStepMs = 100;
+            const int simStepMs = 1000;
 
             var sw = new Stopwatch();
 
