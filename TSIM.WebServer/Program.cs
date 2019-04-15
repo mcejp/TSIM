@@ -37,14 +37,40 @@ namespace TSIM.WebServer
         {
             const int simStepMs = 100;
 
+            var sw = new Stopwatch();
+
+            var lastReport = DateTime.Now;
+            var simTimeSinceLastReportMs = 0;
+            long realTimeSinceLastReportMs = 0;
+
             for (;;)
             {
                 lock (sim)
                 {
+                    sw.Restart();
                     sim.Step(simStepMs * 0.001);
+                    sw.Stop();
                 }
 
-                Thread.Sleep(simStepMs);
+                var realTimeMs = sw.ElapsedMilliseconds;
+
+                simTimeSinceLastReportMs += simStepMs;
+                realTimeSinceLastReportMs += realTimeMs;
+
+                if (DateTime.Now > lastReport + TimeSpan.FromSeconds(10))
+                {
+                    Console.WriteLine($"Took {realTimeSinceLastReportMs * 0.001:F2} s to simulate {simTimeSinceLastReportMs * 0.001:F2} s");
+                    lastReport = DateTime.Now;
+                    simTimeSinceLastReportMs = 0;
+                    realTimeSinceLastReportMs = 0;
+                }
+
+                var sleepTimeMs = simStepMs - realTimeMs;
+
+                if (sleepTimeMs > 0)
+                {
+                    Thread.Sleep((int) sleepTimeMs);
+                }
             }
         }
 
