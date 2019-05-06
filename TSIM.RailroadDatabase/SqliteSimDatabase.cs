@@ -16,6 +16,12 @@ namespace TSIM.RailroadDatabase
         private Unit[] _units;
         private QuadTree? _quadTree;
 
+        //
+        private readonly Dictionary<int, Segment> _segmentCache =
+            new Dictionary<int, Segment>();
+        private readonly Dictionary<(int, SegmentEndpoint), SegmentLink[]> _segmentLinkCache =
+            new Dictionary<(int, SegmentEndpoint), SegmentLink[]>();
+
         private class MyContext : DbContext
         {
             private readonly string _filename;
@@ -150,12 +156,22 @@ namespace TSIM.RailroadDatabase
 
         public Segment GetSegmentById(int id)
         {
-            return db_.Segments.First(s => s.Id == id).ToModel();
+            if (_segmentCache.TryGetValue(id, out var seg))
+            {
+                return seg;
+            }
+
+            return _segmentCache[id] = db_.Segments.First(s => s.Id == id).ToModel();
         }
 
         public SegmentLink[] FindConnectingSegments(int segmentId, SegmentEndpoint ep)
         {
-            return db_.SegmentLinks.Where(l =>
+            if (_segmentLinkCache.TryGetValue((segmentId, ep), out var links))
+            {
+                return links;
+            }
+
+            return _segmentLinkCache[(segmentId, ep)] = db_.SegmentLinks.Where(l =>
                 (l.Segment1 == segmentId && l.Ep1 == ep) || (l.Segment2 == segmentId && l.Ep2 == ep)).ToArray();
         }
 
