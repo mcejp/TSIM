@@ -1,30 +1,58 @@
-﻿using TSIM.RailroadDatabase;
+﻿using CommandLine;
+using TSIM.RailroadDatabase;
 
 namespace TSIM
 {
     static class Program
     {
+        class Options
+        {
+            [Value(0, MetaName = "dbfile", Required = true, HelpText = "Database file to use. (does not need to exist)")]
+            public string DbFile { get; set; }
+
+            [Option(Required = false, HelpText = "Import a scenario from JSON.")]
+            public string? ImportScenario { get; set; }
+
+            [Option(Required = false, HelpText = "Render SVG to the specified file.")]
+            public string? RenderSvg { get; set; }
+
+            // TODO: this is obviously useless and only temporary
+            [Option(Required = false, HelpText = "Run simulation for a brief time.")]
+            public bool Simulate { get; set; }
+        }
+
         static void Main(string[] args)
         {
-            string dbPath = "simdb.sqlite";
+            Parser.Default.ParseArguments<Options>(args)
+                .WithParsed<Options>(o =>
+                {
+                    // import GeoJSON data to SQLite
+                    if (o.ImportScenario != null)
+                    {
+                        InitializeDatabaseFrom(o.DbFile, o.ImportScenario);
+                    }
 
-            // 0. import GeoJSON data to SQLite
-            InitializeDatabaseFrom(dbPath, "data/scenario.json");
+                    // open database
+                    var db = SqliteSimDatabase.Open(o.DbFile);
 
-            // 1. open database
-            var db = SqliteSimDatabase.Open(dbPath);
+                    // simulate
+                    if (o.Simulate)
+                    {
+                        var sim = new Simulation(db.GetCoordinateSpace(), db, db);
+                        sim.Units.SetUnitSpeed(0, 50 / 3.6f);
 
-            // 2. simulate
-//            var sim = new Simulation(db.GetCoordinateSpace(), db, db);
-//            sim.Units.SetUnitSpeed(0, 50 / 3.6f);
-//
-//            for (var i = 0; i < 50; i++)
-//            {
-//                sim.Step(1.0f);
-//            }
+                        for (var i = 0; i < 50; i++)
+                        {
+                            sim.Step(1.0f);
+                        }
+                    }
 
-            // 3. render 2D/3D view
-            GraphicsOutput.RenderSvg(db.GetCoordinateSpace(), db, db, "output.svg");
+                    // render 2D/3D view
+                    if (o.RenderSvg != null)
+                    {
+                        GraphicsOutput.RenderSvg(db.GetCoordinateSpace(), db, db, o.RenderSvg);
+                    }
+                });
         }
 
         private static void InitializeDatabaseFrom(string dbPath, string scenarioJsonFilename)
