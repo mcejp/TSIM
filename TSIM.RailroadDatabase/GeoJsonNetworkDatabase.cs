@@ -163,7 +163,7 @@ namespace TSIM.RailroadDatabase
 
             //var vlak = feature.GetProperty("properties").GetProperty("L_VLAK");
             if (feature.GetProperty("geometry").GetProperty("type").GetString().Equals("LineString")
-                    && feature.GetProperty("properties").GetProperty("L_METRO").Type != JsonValueType.Null)
+                    && feature.GetProperty("properties").GetProperty("L_METRO").ValueKind != JsonValueKind.Null)
             {
                 Vector3? lastOrNull = null;
 
