@@ -6,6 +6,10 @@
         <IsPackable>false</IsPackable>
 
         <RootNamespace>TraficSimulator.Tests</RootNamespace>
+
+        <LangVersion>8</LangVersion>
+
+        <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
