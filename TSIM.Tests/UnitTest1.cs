@@ -27,5 +27,26 @@ namespace TSIM.Tests
             Assert.Equal(0.707, rot.Y, 3);
             Assert.Equal(0, rot.Z, 3);
         }
+
+        [Fact]
+        public void TestSegmentIntersectsLineSegment()
+        {
+            var seg = new Segment(235, SegmentType.Rail,
+                                  new Vector3(5791.738f, -1133.1653f, 0),
+                                  new Vector3(5809.511f, -1121.5898f, 0));
+            Assert.True(Utility.SegmentIntersectsLineSegment(seg, 5792, -1136, 5792, -1120));
+            Assert.True(Utility.SegmentIntersectsLineSegment(seg, 5808, -1136, 5808, -1120));
+        }
+
+        [Fact]
+        public void TestQuadTreeNodeIntersectsSegment()
+        {
+            var node = new QuadTreeNode(new Vector3(5792, -1136, 0),
+                                        new Vector3(5808, -1120, 0));
+            var seg = new Segment(235, SegmentType.Rail,
+                                  new Vector3(5791.738f, -1133.1653f, 0),
+                                  new Vector3(5809.511f, -1121.5898f, 0));
+            Assert.True(node.IntersectedBy(seg));
+        }
     }
 }

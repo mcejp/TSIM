@@ -16,5 +16,31 @@ namespace TSIM.Model
             BoundingMin = boundingMin;
             BoundingMax = boundingMax;
         }
+
+        // TODO: this is not well written
+        public bool IntersectedBy(Segment segment)
+        {
+            // Check if segment lies entirely within the node
+
+            foreach (var cp in segment.ControlPoints)
+            {
+                if (cp.X >= BoundingMin.X && cp.Y >= BoundingMin.Y && cp.X < BoundingMax.X &&
+                    cp.Y < BoundingMax.Y)
+                {
+                    return true;
+                }
+            }
+
+            // Check if segment intersects any edge of the node's bounding box
+
+            return Utility.SegmentIntersectsLineSegment(segment, BoundingMin.X, BoundingMin.Y,
+                       BoundingMax.X, BoundingMin.Y)
+                   || Utility.SegmentIntersectsLineSegment(segment, BoundingMin.X, BoundingMax.Y,
+                       BoundingMax.X, BoundingMax.Y)
+                   || Utility.SegmentIntersectsLineSegment(segment, BoundingMin.X, BoundingMin.Y,
+                       BoundingMin.X, BoundingMax.Y)
+                   || Utility.SegmentIntersectsLineSegment(segment, BoundingMax.X, BoundingMin.Y,
+                       BoundingMax.X, BoundingMax.Y);
+        }
     }
 }

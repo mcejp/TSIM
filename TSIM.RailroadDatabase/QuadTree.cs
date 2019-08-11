@@ -31,7 +31,7 @@ namespace TSIM.RailroadDatabase
 
         private void InsertSegment(QuadTreeNode node, Segment seg)
         {
-            if (!Intersects(node, seg))
+            if (!node.IntersectedBy(seg))
             {
                 throw new InvalidOperationException("Segment to add lies entirely outside node");
             }
@@ -65,7 +65,7 @@ namespace TSIM.RailroadDatabase
                 // Add segment to all children it belongs to
                 foreach (var c in node.Quadrants)
                 {
-                    if (Intersects(c, seg))
+                    if (c.IntersectedBy(seg))
                     {
                         InsertSegmentUnchecked(c, seg);
                     }
@@ -97,32 +97,6 @@ namespace TSIM.RailroadDatabase
             {
                 InsertSegment(node, _network.GetSegmentById(segId));
             }
-        }
-
-        // TODO: this is not well written
-        private static bool Intersects(QuadTreeNode node, Segment segment)
-        {
-            // Check if segment lies entirely within the node
-
-            foreach (var cp in segment.ControlPoints)
-            {
-                if (cp.X >= node.BoundingMin.X && cp.Y >= node.BoundingMin.Y && cp.X < node.BoundingMax.X &&
-                    cp.Y < node.BoundingMax.Y)
-                {
-                    return true;
-                }
-            }
-
-            // Check if segment intersects any edge of the node's bounding box
-
-            return Utility.SegmentIntersectsLineSegment(segment, node.BoundingMin.X, node.BoundingMin.Y,
-                node.BoundingMax.X, node.BoundingMin.Y)
-                   || Utility.SegmentIntersectsLineSegment(segment, node.BoundingMin.X, node.BoundingMax.Y,
-                       node.BoundingMax.X, node.BoundingMax.Y)
-                   || Utility.SegmentIntersectsLineSegment(segment, node.BoundingMin.X, node.BoundingMin.Y,
-                       node.BoundingMin.X, node.BoundingMax.Y)
-                   || Utility.SegmentIntersectsLineSegment(segment, node.BoundingMax.X, node.BoundingMin.Y,
-                       node.BoundingMax.X, node.BoundingMax.Y);
         }
 
         public List<(Segment, SegmentEndpoint)> FindSegmentEndpointsNear(Vector3 point, float radius)

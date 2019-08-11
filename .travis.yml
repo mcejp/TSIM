@@ -17,4 +17,5 @@ script:
   - which dotnet
   - cd GtkSharp && ./build.sh && cd ..
   - /snap/bin/dotnet build TSIM.sln
+  - /snap/bin/dotnet test --verbosity d TSIM.Tests/TSIM.Tests.csproj
   - time /snap/bin/dotnet run --project TSIM/TSIM.csproj -- simdb.sqlite --importscenario data/scenario.json --simulate --rendersvg output.svg
