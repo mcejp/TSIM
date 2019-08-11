@@ -3,14 +3,14 @@
   "networkDatabase": "DOP_PID_TRASY_L.json",
   "unitClassDatabase": "classes.json",
   "units": [
-    {"class": "generic"},
-    {"class": "generic"},
-    {"class": "generic"},
-    {"class": "generic"},
-    {"class": "generic"},
-    {"class": "generic"},
-    {"class": "generic"},
-    {"class": "generic"},
-    {"class": "generic"}
+    {"class": "generic", "pos": [ 3980.1, -1160.4,   0.0], "orientation": [ 0.000, -0.000,  0.957, 0.289]},
+    {"class": "generic", "pos": [ -109.6,   -12.2,   0.0], "orientation": [ 0.000,  0.000,  0.475, 0.880]},
+    {"class": "generic", "pos": [ 3320.6,  5070.2,   0.0], "orientation": [ 0.000,  0.000,  0.107, 0.994]},
+    {"class": "generic", "pos": [ 8603.4,  2607.0,   0.0], "orientation": [ 0.000,  0.000, -0.038, 0.999]},
+    {"class": "generic", "pos": [ 3223.9, -5245.5,   0.0], "orientation": [ 0.000, -0.000,  0.936, 0.352]},
+    {"class": "generic", "pos": [-2260.0, -1526.1,   0.0], "orientation": [ 0.000,  0.000,  0.435, 0.900]},
+    {"class": "generic", "pos": [-6265.6,  -168.0,   0.0], "orientation": [ 0.000, -0.000,  0.718, 0.696]},
+    {"class": "generic", "pos": [ -226.4,  -208.5,   0.0], "orientation": [ 0.000,  0.000,  0.509, 0.861]},
+    {"class": "generic", "pos": [ -109.6,   -12.2,   0.0], "orientation": [ 0.000,  0.000,  0.475, 0.880]}
   ]
 }
