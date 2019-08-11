@@ -20,8 +20,8 @@ namespace TSIM.WebServer
         public static void Main(string[] args)
         {
             // 1. open pre-initialized DB
-            // Doing this "properly" is super crap.
-            var db = SqliteSimDatabase.Open(File.Exists("simdb.sqlite") ? "simdb.sqlite" : "../simdb.sqlite");
+            // Doing this "properly" is super crap. (Why again?)
+            var db = SqliteSimDatabase.Open(File.Exists("work/simdb.sqlite") ? "work/simdb.sqlite" : "../work/simdb.sqlite");
 
             // 2. simulate
             var sim = new Simulation(db.GetCoordinateSpace(), db, db);
