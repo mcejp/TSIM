@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using TSIM.Model;
 using TSIM.RailroadDatabase;
 
@@ -10,15 +11,17 @@ namespace TSIM
 {
     internal class ScenarioDescriptor
     {
-        public (double lat, double lon) CoordinateSystemOrigin;
+        // Eugh
+//        [JsonPropertyName("coordinateSystemOrigin")] public (double lat, double lon) CoordinateSystemOrigin { get; set; }
+        [JsonPropertyName("coordinateSystemOrigin")] public double[] CoordinateSystemOrigin { get; set; }
 
-        public string NetworkDatabaseFileName;
-        public string UnitClassDatabaseFileName;
-        public readonly List<UnitDescriptor> Units = new List<UnitDescriptor>();
+        [JsonPropertyName("networkDatabase")] public string NetworkDatabaseFileName { get; set; }
+        [JsonPropertyName("unitClassDatabase")] public string UnitClassDatabaseFileName { get; set; }
+        [JsonPropertyName("units")] public List<UnitDescriptor> Units { get; set; }
 
         public class UnitDescriptor
         {
-            public string Class;
+            [JsonPropertyName("class")] public string Class { get; set; }
         }
     }
 
@@ -36,7 +39,7 @@ namespace TSIM
             {
                 var desc = LoadScenarioDescriptor(file);
 
-                var coordinateSpace = new SimulationCoordinateSpace(desc.CoordinateSystemOrigin.lat, desc.CoordinateSystemOrigin.lon);
+                var coordinateSpace = new SimulationCoordinateSpace(desc.CoordinateSystemOrigin[0], desc.CoordinateSystemOrigin[1]);
                 var networkDatabase = new GeoJsonNetworkDatabase(coordinateSpace,
                                                                  Path.Join(basePath, desc.NetworkDatabaseFileName));
                 var unitClassDatabase = new JsonUnitClassDatabase(Path.Join(basePath, desc.UnitClassDatabaseFileName));
@@ -46,7 +49,7 @@ namespace TSIM
                 {
                     var rand = new Random();
 
-                    // randomly pick a segment
+                    // FIXME: randomly pick a segment
                     var seg = networkDatabase.GetSegmentById(rand.Next(1, 600));
 
                     var class_ = unitClassDatabase.UnitClassByName(unitDesc.Class);
@@ -59,27 +62,9 @@ namespace TSIM
             }
         }
 
-        // TODO: use JsonSerializer/Deserializer once available
         private static ScenarioDescriptor LoadScenarioDescriptor(StreamReader file)
         {
-            var document = JsonDocument.Parse(file.BaseStream);
-
-            ScenarioDescriptor desc = new ScenarioDescriptor
-            {
-                CoordinateSystemOrigin = (document.RootElement.GetProperty("coordinateSystemOrigin")[0].GetDouble(),
-                    document.RootElement.GetProperty("coordinateSystemOrigin")[1].GetDouble()),
-                NetworkDatabaseFileName = document.RootElement.GetProperty("networkDatabase").GetString(),
-                UnitClassDatabaseFileName = document.RootElement.GetProperty("unitClassDatabase").GetString()
-            };
-
-            foreach (var unitJson in document.RootElement.GetProperty("units").EnumerateArray())
-            {
-                var unit = new ScenarioDescriptor.UnitDescriptor();
-                unit.Class = unitJson.GetProperty("class").GetString();
-                desc.Units.Add(unit);
-            }
-
-            return desc;
+            return JsonSerializer.Deserialize<ScenarioDescriptor>(file.ReadToEnd());
         }
     }
 }

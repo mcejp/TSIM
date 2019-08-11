@@ -15,7 +15,7 @@ namespace TSIM.WebServer
 {
     public class Program
     {
-        public static Simulation uglyGlobalSimulation;
+        public static Simulation uglyGlobalSimulation;        // Why global?
 
         public static void Main(string[] args)
         {
