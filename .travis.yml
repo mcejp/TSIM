@@ -1,0 +1,20 @@
+dist: xenial
+addons:
+  snaps:
+    - name: dotnet-sdk
+      classic: true
+      channel: latest/beta
+sudo: required
+language: csharp
+mono: latest
+dotnet: 2.0.0
+
+# dotnet 2 gets installed as /usr/bin/dotnet
+# dotnet 3 gets installed as /snap/bin/dotnet
+script:
+  - sudo snap alias dotnet-sdk.dotnet dotnet
+  - dotnet --version
+  - which dotnet
+  - cd GtkSharp && ./build.sh && cd ..
+  - /snap/bin/dotnet build TSIM.sln
+  - /snap/bin/dotnet run --project TSIM/TSIM.csproj
