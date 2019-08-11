@@ -1,5 +1,5 @@
 # TSIM
-Transport simulation playground
+Transport simulation playground ![CI status](https://travis-ci.com/cejpmart/TSIM.svg?branch=develop)
 
 ![screenshot](https://github.com/cejpmart/TSIM/blob/develop/screenshots/output.svg)
 
