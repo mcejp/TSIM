@@ -1,0 +1,1 @@
+Something is broken somewhere, so we applied the fix described in https://github.com/aspnet/AspNetCore/issues/3443#issuecomment-498329024. Long-term this might be counterproductive and should be re-evaluated.
