@@ -73,6 +73,14 @@ namespace TSIM
 
             for (var unitIndex = 0; unitIndex < Units.GetNumUnits(); unitIndex++)
             {
+                if (!_currentSegmentByUnitId[unitIndex].HasValue)
+                {
+                    // FIXME: units not riding on a track segment
+                    // - are there legitimate reasons why this would happen?
+                    // - if yes, how to handle it?
+                    continue;
+                }
+
                 var unit = Units.GetUnitByIndex(unitIndex);
                 var speed = unit.Velocity.Length();
 
