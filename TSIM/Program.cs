@@ -1,4 +1,6 @@
 ﻿using CommandLine;
+using System;
+using System.Diagnostics;
 using TSIM.RailroadDatabase;
 
 namespace TSIM
@@ -38,13 +40,21 @@ namespace TSIM
                     // simulate
                     if (o.Simulate)
                     {
+                        var sw = new Stopwatch();
+                        sw.Restart();
+
                         var sim = new Simulation(db.GetCoordinateSpace(), db, db);
                         sim.Units.SetUnitSpeed(0, 50 / 3.6f);
 
-                        for (var i = 0; i < 50; i++)
+                        var steps = 50;
+                        var dt = 1.0f;
+
+                        for (var i = 0; i < steps; i++)
                         {
-                            sim.Step(1.0f);
+                            sim.Step(dt);
                         }
+
+                        Console.WriteLine($"Took {sw.ElapsedMilliseconds * 0.001:F2} s to simulate {steps * dt:F2} s");
                     }
 
                     // render 2D/3D view
