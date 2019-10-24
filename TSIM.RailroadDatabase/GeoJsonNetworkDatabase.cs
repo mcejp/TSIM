@@ -203,6 +203,11 @@ namespace TSIM.RailroadDatabase
                 // Find or create Station
                 var stationName = feature.GetProperty("properties").GetProperty("name").GetString();
 
+                if (stationName == null)
+                {
+                    return;
+                }
+
                 var coordinate = feature.GetProperty("geometry").GetProperty("coordinates");
                 Trace.Assert(coordinate.GetArrayLength() == 2);
                 var (lon, lat) = (coordinate[0].GetDouble(), coordinate[1].GetDouble()); // beware the order!!

@@ -26,4 +26,4 @@ osmosis --read-pbf praha-latest.osm.pbf \
         --used-node \
         --write-xml praha-subway.osm
 
-Then something (osm to JSON) ??
+Then import OSM into QGIS... and do what?
