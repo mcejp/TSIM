@@ -9,7 +9,7 @@ namespace TSIM.Tests
     public class UnitTest1
     {
         [Fact]
-        public void Test1()
+        public void TestSimulationCoordinateSpaceFromLatLon()
         {
             var space = new SimulationCoordinateSpace(50.083239, 14.435278);
             var vector = space.To(50.1, 14.5);
@@ -18,7 +18,7 @@ namespace TSIM.Tests
         }
 
         [Fact]
-        public void Test2()
+        public void TestDirectionVectorToQuaternion()
         {
             var dir = new Vector3(10, 10, 0);
             var quat = Utility.DirectionVectorToQuaternion(dir);
