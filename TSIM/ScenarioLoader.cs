@@ -61,14 +61,16 @@ namespace TSIM
                         var rand = new Random();
 
                         // randomly pick a track segment
-                        var seg = networkDatabase.GetSegmentById(rand.Next(1, 600));
+                        int segId = rand.Next(1, 600);
+                        var seg = networkDatabase.GetSegmentById(segId);
 
                         var (pos, dir) = seg.GetPointAndTangent(0.5f, SegmentEndpoint.Start);
                         var orientation = Utility.DirectionVectorToQuaternion(dir);
 
                         Console.Out.WriteLine(
                             $"{{\"class\": \"generic\", \"pos\": [{pos.X,7:F1}, {pos.Y,7:F1}, {pos.Z,5:F1}], " +
-                            $"\"orientation\": [{orientation.X,6:F3}, {orientation.Y,6:F3}, {orientation.Z,6:F3}, {orientation.W,5:F3}]}},");
+                            $"\"orientation\": [{orientation.X,6:F3}, {orientation.Y,6:F3}, {orientation.Z,6:F3}, {orientation.W,5:F3}], " +
+                            $"segId: {segId}}},");
                         units.Add(new Unit(class_, pos, Vector3.Zero, orientation));
                     }
                     else

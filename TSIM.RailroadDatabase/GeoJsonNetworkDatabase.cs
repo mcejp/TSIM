@@ -46,9 +46,11 @@ namespace TSIM.RailroadDatabase
             _segments = uniqueSegments;
             var quadTree = new QuadTree(this, new Vector3(-powerOf2, -powerOf2, 0), new Vector3(powerOf2, powerOf2, 0));
 
+            int i = 1;
             foreach (var seg in _segments)
             {
                 quadTree.InsertSegment(seg);
+                i++;
             }
 
             var segmentLinks = new List<SegmentLink>();
