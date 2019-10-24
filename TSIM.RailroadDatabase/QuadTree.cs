@@ -153,6 +153,22 @@ namespace TSIM.RailroadDatabase
 
         private void CollectNearbySegments(ICollection<(Segment, float)> list, QuadTreeNode node, Vector3 point, float radius)
         {
+            /*
+            Console.Out.WriteLine($"CollectNearbySegments -> {node.BoundingMin.X}, {node.BoundingMin.Y} .. {node.BoundingMax.X}, {node.BoundingMax.Y}");
+
+            if (node.Quadrants == null)
+            {
+                if (node.SegmentIds != null)
+                {
+                    Console.Out.WriteLine($"    (leaf with {node.SegmentIds.Count} items)");
+                }
+                else
+                {
+                    Console.Out.WriteLine($"    (leaf empty)");
+                }
+            }
+            */
+
             // Because of the radius of tolerance, there might be results in this node even if the point lies outside
             // (but no further than the radius)
             if (Utility.DistancePointRectangle(point.X, point.Y, node.BoundingMin.X, node.BoundingMin.Y,
