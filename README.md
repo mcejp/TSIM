@@ -17,3 +17,13 @@ Transport simulation playground
 ```sh
 /opt/dotnet-sdk-3.0.100-linux-x64/dotnet test TSIM.Tests/TSIM.Tests.csproj
 ```
+
+## Extracting dataset (Praha subway)
+
+osmosis --read-pbf praha-latest.osm.pbf \
+        --tf accept-ways railway=subway \
+        --tf reject-relations \
+        --used-node \
+        --write-xml praha-subway.osm
+
+Then something (osm to JSON) ??

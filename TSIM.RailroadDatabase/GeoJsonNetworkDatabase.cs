@@ -161,9 +161,7 @@ namespace TSIM.RailroadDatabase
         {
             Trace.Assert(feature.GetProperty("type").GetString().Equals("Feature"));
 
-            //var vlak = feature.GetProperty("properties").GetProperty("L_VLAK");
-            if (feature.GetProperty("geometry").GetProperty("type").GetString().Equals("LineString")
-                    && feature.GetProperty("properties").GetProperty("L_METRO").ValueKind != JsonValueKind.Null)
+            if (feature.GetProperty("geometry").GetProperty("type").GetString().Equals("LineString"))
             {
                 Vector3? lastOrNull = null;
 
@@ -198,15 +196,10 @@ namespace TSIM.RailroadDatabase
         {
             Trace.Assert(feature.GetProperty("type").GetString().Equals("Feature"));
 
-            // http://www.geoportalpraha.cz/cs/fulltext_geoportal?id=D1B945B5-0929-4C40-94AC-8A129FDE9D38
-            int ZAST_DD_metro = 1;
-
-            //var vlak = feature.GetProperty("properties").GetProperty("L_VLAK");
-            if (feature.GetProperty("geometry").GetProperty("type").GetString().Equals("Point")
-                     && feature.GetProperty("properties").GetProperty("ZAST_DD").GetInt32() == ZAST_DD_metro)
+            if (feature.GetProperty("geometry").GetProperty("type").GetString().Equals("Point"))
             {
                 // Find or create Station
-                var stationName = feature.GetProperty("properties").GetProperty("ZAST_NAZEV").GetString();
+                var stationName = feature.GetProperty("properties").GetProperty("name").GetString();
 
                 var coordinate = feature.GetProperty("geometry").GetProperty("coordinates");
                 Trace.Assert(coordinate.GetArrayLength() == 2);
