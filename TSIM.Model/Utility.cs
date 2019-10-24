@@ -42,37 +42,57 @@ namespace TSIM.Model
 
         public static bool SegmentIntersectsLineSegment(Segment segment, float x1, float y1, float x2, float y2)
         {
-            if (segment.ControlPoints.Length != 2)
-            {
-                throw new NotImplementedException("Not implemented for higher-order splines");
-            }
+	        if (segment.ControlPoints.Length != 2)
+	        {
+		        throw new NotImplementedException("Not implemented for higher-order splines");
+	        }
 
-            // sx1 + (ex1 - sx1) * t1 = sx2 + (ex2 - sx2) * t2;
-            // sy1 + (ey1 - sy1) * t1 = sy2 + (ey2 - sy2) * t2;
+	        var sx1 = segment.ControlPoints[0].X;
+	        var sy1 = segment.ControlPoints[0].Y;
+	        var ex1 = segment.ControlPoints[1].X;
+	        var ey1 = segment.ControlPoints[1].Y;
 
-            // => t1 = (sx2 + (ex2 - sx2) * t2 - sx1) / (ex1 - sx1)
-            // => t2 = (sy1 + (ey1 - sy1) * t1 - sy2) / (ey2 - sy2)
-            // => t2 = (sy1 - sy2 + (ey1 - sy1) * ((sx2 + (ex2 - sx2) * t2 - sx1) / (ex1 - sx1))) / (ey2 - sy2)
-            // => t2 * (ey2 - sy2) = sy1 - sy2 + (ey1 - sy1) * ((sx2 + (ex2 - sx2) * t2 - sx1) / (ex1 - sx1))
-            // => t2 * (ey2 - sy2) * (ex1 - sx1) = (sy1 - sy2) * (ex1 - sx1) + (ey1 - sy1) * (sx2 + (ex2 - sx2) * t2 - sx1)
-            // => t2 * (ey2 - sy2) * (ex1 - sx1) = (sy1 - sy2) * (ex1 - sx1) + (ey1 - sy1) * (sx2 - sx1) + (ey1 - sy1) * (ex2 - sx2) * t2
-            // => t2 * (ey2 - sy2) * (ex1 - sx1) - t2 * (ey1 - sy1) * (ex2 - sx2) = (sy1 - sy2) * (ex1 - sx1) + (ey1 - sy1) * (sx2 - sx1)
-            // => t2 = (sy1 - sy2) * (ex1 - sx1) + (ey1 - sy1) * (sx2 - sx1) / ((ey2 - sy2) * (ex1 - sx1) + (ey1 - sy1) * (ex2 - sx2))
+	        var sx2 = x1;
+	        var sy2 = y1;
+	        var ex2 = x2;
+	        var ey2 = y2;
 
-            var sx1 = segment.ControlPoints[0].X;
-            var sy1 = segment.ControlPoints[0].Y;
-            var ex1 = segment.ControlPoints[1].X;
-            var ey1 = segment.ControlPoints[1].Y;
+	        // Algorithm adapted from https://www.habrador.com/tutorials/math/5-line-line-intersection/
 
-            var sx2 = x1;
-            var sy2 = y1;
-            var ex2 = x2;
-            var ey2 = y2;
+			//To avoid floating point precision issues we can add a small value
+			float epsilon = 0.00001f;
+			bool shouldIncludeEndPoints = true;
 
-            var t2 = (sy1 - sy2) * (ex1 - sx1) + (ey1 - sy1) * (sx2 - sx1) / ((ey2 - sy2) * (ex1 - sx1) + (ey1 - sy1) * (ex2 - sx2));
-            var t1 = (sx2 + (ex2 - sx2) * t2 - sx1) / (ex1 - sx1);
+			bool isIntersecting = false;
 
-            return t1 >= 0.0f && t1 <= 1.0f && t2 >= 0.0f && t2 <= 1.0f;
+			float denominator = (ey2 - sy2) * (ex1 - sx1) - (ex2 - sx2) * (ey1 - sy1);
+
+			//Make sure the denominator is > 0, if not the lines are parallel
+			if (denominator != 0f)
+			{
+				float u_a = ((ex2 - sx2) * (sy1 - sy2) - (ey2 - sy2) * (sx1 - sx2)) / denominator;
+				float u_b = ((ex1 - sx1) * (sy1 - sy2) - (ey1 - sy1) * (sx1 - sx2)) / denominator;
+
+				//Are the line segments intersecting if the end points are the same
+				if (shouldIncludeEndPoints)
+				{
+					//Is intersecting if u_a and u_b are between 0 and 1 or exactly 0 or 1
+					if (u_a >= 0f + epsilon && u_a <= 1f - epsilon && u_b >= 0f + epsilon && u_b <= 1f - epsilon)
+					{
+						return true;
+					}
+				}
+				else
+				{
+					//Is intersecting if u_a and u_b are between 0 and 1
+					if (u_a > 0f + epsilon && u_a < 1f - epsilon && u_b > 0f + epsilon && u_b < 1f - epsilon)
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
         }
 
         // https://stackoverflow.com/a/18157551
