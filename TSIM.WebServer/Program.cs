@@ -28,8 +28,10 @@ namespace TSIM.WebServer
 
             // 3. add agents
             for (int unitIndex = 0; unitIndex < db.GetNumUnits(); unitIndex++)
-            {
-                sim.AddAgent(new StationToStationAgent(db, db, unitIndex, unitIndex == 0));
+            {   
+                // Too slow for now, use constant speed
+//                sim.AddAgent(new StationToStationAgent(db, db, unitIndex, unitIndex == 0));
+                sim.Units.SetUnitSpeed(0, 50 / 3.6f);
             }
 
             uglyGlobalSimulation = sim;

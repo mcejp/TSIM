@@ -18,4 +18,5 @@ script:
   - cd GtkSharp && ./build.sh && cd ..
   - /snap/bin/dotnet build TSIM.sln
   - /snap/bin/dotnet test --verbosity d TSIM.Tests/TSIM.Tests.csproj
-  - time /snap/bin/dotnet run --project TSIM/TSIM.csproj -- simdb.sqlite --importscenario data/scenario.json --simulate --rendersvg output.svg
+# Does not work for the moment -- probably because gtk libraries including Cairo are missing on the CI server
+#  - time /snap/bin/dotnet run --project TSIM/TSIM.csproj -- simdb.sqlite --importscenario data/scenario.json --simulate --rendersvg output.svg
