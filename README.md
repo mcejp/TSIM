@@ -11,3 +11,9 @@ Transport simulation playground
 3. Build and execute target "TSIM.WebServer". The database will be loaded and simulation can be observed in the browser.
    The trains are just programmed to try and stop at the closest station until better control architecture
    is implemented.
+
+## How to run tests
+
+```sh
+/opt/dotnet-sdk-3.0.100-linux-x64/dotnet test TSIM.Tests/TSIM.Tests.csproj
+```
