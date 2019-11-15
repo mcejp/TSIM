@@ -9,19 +9,27 @@ namespace TSIM.WebServer
     {
         private readonly INetworkDatabase _network;
         private readonly IUnitDatabase _units;
+        private readonly ISignalSink _log;
         private readonly int _unitIndex;
-        private readonly bool _tracked;
+        private readonly int _logPin, _distanceToTargetPin, _forcePin, _velocityPin, _velocityTargetPin;
 
         private TrajectorySegment[] _plan;
 
-        private DateTime _lastReport;
+//        private DateTime _lastReport;
 
-        public StationToStationAgent(INetworkDatabase network, IUnitDatabase units, int unitIndex, bool tracked)
+        public StationToStationAgent(INetworkDatabase network, IUnitDatabase units, ISignalSink log, int unitIndex)
         {
             _network = network;
             _units = units;
+            _log = log;
             _unitIndex = unitIndex;
-            _tracked = tracked;
+
+            var eh = _log.GetEntityHandle(typeof(StationToStationAgent), unitIndex);
+            _logPin = _log.GetSignalPin(eh, "implFeed");
+            _distanceToTargetPin = _log.GetSignalPin(eh, "distanceToTarget");
+            _forcePin = _log.GetSignalPin(eh, "force");
+            _velocityPin = _log.GetSignalPin(eh, "velocity");
+            _velocityTargetPin = _log.GetSignalPin(eh, "velocity(target)");
         }
 
         public (int, float) Step(Simulation sim, double dt)
@@ -45,7 +53,7 @@ namespace TSIM.WebServer
                 if (nearest != null)
                 {
                     var (station, stop, distance, plan) = nearest.Value;
-                    Console.WriteLine($"Set goal: station {station.Name}, {distance:F0} m away");
+                    _log.Feed(_logPin, $"Set goal: station {station.Name}, {distance:F0} m away");
                     _plan = plan;
                 }
             }
@@ -106,11 +114,16 @@ namespace TSIM.WebServer
             var force = (targetSpeed - unit.Velocity.Length()) * 200_000;
             force = Math.Min(Math.Max(force, -maxBrake), maxAccelerate);
 
-            if (_tracked && DateTime.Now - _lastReport > TimeSpan.FromSeconds(1))
-            {
-                Console.WriteLine($"Distance to goal is {theDistToGoal} m; velocity {unit.Velocity.Length()} / {targetSpeed}; force {force} N");
-                _lastReport = DateTime.Now;
-            }
+//            if (_tracked && DateTime.Now - _lastReport > TimeSpan.FromSeconds(1))
+//            {
+//                Console.WriteLine($"Distance to goal is {theDistToGoal} m; velocity {unit.Velocity.Length()} / {targetSpeed}; force {force} N");
+//                _lastReport = DateTime.Now;
+//            }
+
+            _log.FeedNullable(_distanceToTargetPin, theDistToGoal);
+            _log.Feed(_forcePin, force);
+            _log.Feed(_velocityTargetPin, targetSpeed);
+            _log.Feed(_velocityPin, unit.Velocity.Length());
 
             return (_unitIndex, force);
         }

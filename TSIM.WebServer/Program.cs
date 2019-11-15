@@ -19,6 +19,12 @@ namespace TSIM.WebServer
 
         public static void Main(string[] args)
         {
+            // 0. init internals
+            var log = new LoggingManager();
+            var cp = new LoggingManager.ClassPolicy(acceptByDefault: false, acceptId: new int[] {0});
+//            cp.SetThrottleRate(1);
+            log.SetClassPolicy(typeof(StationToStationAgent), cp);
+
             // 1. open pre-initialized DB
             // Doing this "properly" is super crap. (Why again?)
             var db = SqliteSimDatabase.Open(File.Exists("work/simdb.sqlite") ? "work/simdb.sqlite" : "../work/simdb.sqlite");
@@ -30,7 +36,7 @@ namespace TSIM.WebServer
             for (int unitIndex = 0; unitIndex < db.GetNumUnits(); unitIndex++)
             {
                 // FIXME: StationToStationAgent will be extremely slow if there are no easily reachable stations
-                sim.AddAgent(new StationToStationAgent(db, db, unitIndex, unitIndex == 0));
+                sim.AddAgent(new StationToStationAgent(db, db, log, unitIndex));
 
                 // Backup:
 //                sim.Units.SetUnitSpeed(0, 50 / 3.6f);
