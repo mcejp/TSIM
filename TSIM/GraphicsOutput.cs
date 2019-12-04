@@ -77,6 +77,8 @@ namespace TSIM
                 cr.MoveTo(start);
                 cr.LineTo(end);
                 cr.Stroke();
+
+//                DrawTextRegular(cr, $"{seg.Id}", new PointD((start.X + end.X) / 2, (start.Y + end.Y) / 2), 9);
             }
 
             // Draw stations

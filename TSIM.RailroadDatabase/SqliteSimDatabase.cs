@@ -298,6 +298,8 @@ namespace TSIM.RailroadDatabase
             {
                 if (candidate.Segment1 == segmentId && candidate.Ep1 == dir)
                 {
+//                    Console.WriteLine($"SearchNearestStationAlongTrack: candidate {segmentId},{dir} -> {candidate.Segment2},{candidate.Ep2} ({distanceAtEnd})");
+
                     backlog.Enqueue((candidate.Segment2,
                             candidate.Ep2 == SegmentEndpoint.Start ? 0 : 1,
                             candidate.Ep2.Other(),
@@ -307,6 +309,8 @@ namespace TSIM.RailroadDatabase
                 }
                 else if (candidate.Segment2 == segmentId && candidate.Ep2 == dir)
                 {
+//                    Console.WriteLine($"SearchNearestStationAlongTrack: candidate {segmentId},{dir} -> {candidate.Segment1},{candidate.Ep1} ({distanceAtEnd})");
+
                     backlog.Enqueue((candidate.Segment1,
                             candidate.Ep1 == SegmentEndpoint.Start ? 0 : 1,
                             candidate.Ep1.Other(),

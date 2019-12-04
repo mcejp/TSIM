@@ -30,6 +30,8 @@ namespace TSIM.WebServer
             _forcePin = _log.GetSignalPin(eh, "force");
             _velocityPin = _log.GetSignalPin(eh, "velocity");
             _velocityTargetPin = _log.GetSignalPin(eh, "velocity(target)");
+
+//            _network.FindNearestStationAlongTrack(33, 0.01897f, SegmentEndpoint.End);
         }
 
         public (int, float) Step(Simulation sim, double dt)
