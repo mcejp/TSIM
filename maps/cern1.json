@@ -1,0 +1,8 @@
+{
+  "coordinateSystemOrigin": [46.2340049, 6.0552315],
+  "networkDatabase": "cern1.geojson",
+  "unitClassDatabase": "../data/classes.json",
+  "units": [
+    {"class": "generic", "pos": [-1005.2,    36.3,   0.0], "orientation": [ 0.000,  0.000, -0.398, 0.917], "segId": 1}
+  ]
+}
