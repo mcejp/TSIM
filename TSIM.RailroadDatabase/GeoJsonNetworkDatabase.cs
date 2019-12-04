@@ -165,33 +165,50 @@ namespace TSIM.RailroadDatabase
 
             if (feature.GetProperty("geometry").GetProperty("type").GetString().Equals("LineString"))
             {
-                Vector3? lastOrNull = null;
+                var coordinates = feature.GetProperty("geometry").GetProperty("coordinates").EnumerateArray();
 
+                return ProcessLineString(segments, coordinates);
+            }
+            else if (feature.GetProperty("geometry").GetProperty("type").GetString().Equals("MultiLineString"))
+            {
                 float maxCoordinate = 0;
 
-                foreach (var coordinate in feature.GetProperty("geometry").GetProperty("coordinates").EnumerateArray())
+                foreach (JsonElement coordinates in feature.GetProperty("geometry").GetProperty("coordinates").EnumerateArray())
                 {
-                    Trace.Assert(coordinate.GetArrayLength() == 2);
-                    var (lon, lat) = (coordinate[0].GetDouble(), coordinate[1].GetDouble()); // beware the order!!
-                    // also see https://macwright.org/lonlat/
-                    var vec = _coordinateSpace.To(lat, lon);
-
-                    maxCoordinate = Math.Max(maxCoordinate, Math.Max(Math.Abs(vec.X), Math.Abs(vec.Y)));
-
-                    if (lastOrNull is Vector3 last)
-                    {
-                        var segmentId = 1 + segments.Count;
-                        var seg = new Segment(segmentId, SegmentType.Rail, last, vec);
-                        segments.Add(seg);
-                    }
-
-                    lastOrNull = vec;
+                    maxCoordinate = Math.Max(maxCoordinate, ProcessLineString(segments, coordinates.EnumerateArray()));
                 }
 
                 return maxCoordinate;
             }
 
             return 0;
+        }
+
+        private float ProcessLineString(List<Segment> segments, JsonElement.ArrayEnumerator coordinates)
+        {
+            float maxCoordinate = 0;
+            Vector3? lastOrNull = null;
+
+            foreach (var coordinate in coordinates)
+            {
+                Trace.Assert(coordinate.GetArrayLength() == 2);
+                var (lon, lat) = (coordinate[0].GetDouble(), coordinate[1].GetDouble()); // beware the order!!
+                // also see https://macwright.org/lonlat/
+                var vec = _coordinateSpace.To(lat, lon);
+
+                maxCoordinate = Math.Max(maxCoordinate, Math.Max(Math.Abs(vec.X), Math.Abs(vec.Y)));
+
+                if (lastOrNull is Vector3 last)
+                {
+                    var segmentId = 1 + segments.Count;
+                    var seg = new Segment(segmentId, SegmentType.Rail, last, vec);
+                    segments.Add(seg);
+                }
+
+                lastOrNull = vec;
+            }
+
+            return maxCoordinate;
         }
 
         private void ProcessStationFeature(JsonElement feature, QuadTree quadTree, IDictionary<string, Station> stations)
@@ -214,10 +231,11 @@ namespace TSIM.RailroadDatabase
                 // also see https://macwright.org/lonlat/
                 var vec = _coordinateSpace.To(lat, lon);
 
-                var candidates = quadTree.FindSegmentsNear(vec, 20.0f);
+                var radius = 20.0f;
+                var candidates = quadTree.FindSegmentsNear(vec, radius);
                 if (!candidates.Any())
                 {
-                    Console.Error.WriteLine($"Warning: couldn't snap station {stationName} to network");
+                    Console.Error.WriteLine($"Warning: couldn't snap station {stationName} to network (radius {radius:F0} meters)");
                     return;
                 }
 
