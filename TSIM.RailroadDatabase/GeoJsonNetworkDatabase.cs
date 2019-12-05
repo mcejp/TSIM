@@ -56,7 +56,8 @@ namespace TSIM.RailroadDatabase
             var segmentLinks = new List<SegmentLink>();
             NetworkImporterUtility.CreateSegmentLinks(_segments, segmentLinks, quadTree,
                 0.2f,
-                (float) (Math.PI * 0.25f) // 45 degrees
+                (float) (45 / 180.0f * Math.PI),
+                (float) (65 / 180.0f * Math.PI)
             );
 
             // Only after we have the final set of segments is it possible to load stations

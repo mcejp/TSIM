@@ -7,14 +7,16 @@ namespace TSIM.RailroadDatabase
 {
     public class NetworkImporterUtility
     {
-        private static void CreateLinksForSegmentEndpoint(List<SegmentLink> segmentLinks, QuadTree quadTree, Segment seg, SegmentEndpoint ep, float range, float maxAngle)
+        private static void CreateLinksForSegmentEndpoint(List<SegmentLink> segmentLinks, QuadTree quadTree, Segment seg, SegmentEndpoint ep, float range, float maxAngle, float warningAngle)
         {
             var point = seg.GetEndpoint(ep);
 
             // Get a list of (segment, endpoint) tuples around point of interest
+            // TODO: also implement a warningRange akin to warningAngle
             var candidates = quadTree.FindSegmentEndpointsNear(point, range);
 
             var maxCosine = Math.Cos(maxAngle);
+            var warningCosine = Math.Cos(warningAngle);
 
             foreach (var (candiSeg, candiEp) in candidates)
             {
@@ -29,8 +31,16 @@ namespace TSIM.RailroadDatabase
                     var tangent1 = seg.GetEndpointTangent(ep, true);
                     var tangent2 = candiSeg.GetEndpointTangent(candiEp, false);
 
-                    if (Vector3.Dot(tangent1, tangent2) < maxCosine)
+                    // Angle too great?
+                    var dot = Vector3.Dot(tangent1, tangent2);
+                    if (dot < maxCosine)
                     {
+                        // ...but within warning area?
+                        if (dot > warningCosine)
+                        {
+                            Console.WriteLine($"Warning: angle between segments {seg.Id}, {candiSeg.Id} too large: {Math.Acos(dot) * 180.0f / Math.PI:F1} deg > {maxAngle * 180.0f / Math.PI:F1} deg");
+                        }
+
                         // Reject pair of segments on basis of too great angle
                         continue;
                     }
@@ -41,13 +51,13 @@ namespace TSIM.RailroadDatabase
         }
 
         public static void CreateSegmentLinks(List<Segment> segments, List<SegmentLink> segmentLinks, QuadTree quadTree,
-            float range, float maxAngle)
+            float range, float maxAngle, float warningAngle)
         {
             foreach (var seg in segments)
             {
                 // Check both endpoints for possible connections
-                CreateLinksForSegmentEndpoint(segmentLinks, quadTree, seg, SegmentEndpoint.Start, range, maxAngle);
-                CreateLinksForSegmentEndpoint(segmentLinks, quadTree, seg, SegmentEndpoint.End, range, maxAngle);
+                CreateLinksForSegmentEndpoint(segmentLinks, quadTree, seg, SegmentEndpoint.Start, range, maxAngle, warningAngle);
+                CreateLinksForSegmentEndpoint(segmentLinks, quadTree, seg, SegmentEndpoint.End, range, maxAngle, warningAngle);
             }
         }
     }
