@@ -33,7 +33,7 @@ namespace TSIM.WebServer
             _velocityTargetPin = _log.GetSignalPin(eh, "velocity(target)");
             _debugPin = _log.GetSignalPin(eh, "debug");
 
-//            _network.FindNearestStationAlongTrack(33, 0.01897f, SegmentEndpoint.End);
+//            _network.FindNearestStationAlongTrack(1, 0.05f, SegmentEndpoint.Start, true);
         }
 
         public (int, float) Step(Simulation sim, double dt)
@@ -52,7 +52,7 @@ namespace TSIM.WebServer
 
                 // Follow track to nearest station
                 // This is going to be super slow, cache results!
-                var nearest = _network.FindNearestStationAlongTrack(segmentId, t, dir);
+                var nearest = _network.FindNearestStationAlongTrack(segmentId, t, dir, false);
 
                 if (nearest != null)
                 {

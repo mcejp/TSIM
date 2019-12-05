@@ -176,7 +176,7 @@ namespace TSIM.RailroadDatabase
         }
 
         public (Station station, StationStop stop, float distance, TrajectorySegment[] plan)? FindNearestStationAlongTrack(
-            int segmentId, float t, SegmentEndpoint dir)
+            int segmentId, float t, SegmentEndpoint dir, bool verbose)
         {
             // Queue of tuples (segmentId, t(entry), dir) for breath-first search
             var backlog = new Queue<(int, float, SegmentEndpoint, float, TrajectorySegment)>();
@@ -191,7 +191,7 @@ namespace TSIM.RailroadDatabase
                 TrajectorySegment predecessor;
                 (segmentId, t, dir, distance, predecessor) = backlog.Dequeue();
 
-                var found = SearchNearestStationAlongTrack(segmentId, t, dir, distance, best?.distance, backlog, predecessor);
+                var found = SearchNearestStationAlongTrack(segmentId, t, dir, distance, best?.distance, backlog, predecessor, verbose);
 
                 if (found != null)
                 {
@@ -217,19 +217,22 @@ namespace TSIM.RailroadDatabase
                 head = head.Prev;
             }
 
-//            Console.WriteLine("PRINTING HET PLAAN:");
-//
-//            foreach (var node in plan)
-//            {
-//                Console.WriteLine($"  - {node}");
-//            }
+            if (verbose)
+            {
+                Console.WriteLine("PRINTING HET PLAAN:");
+
+                foreach (var node in plan)
+                {
+                    Console.WriteLine($"  - {node}");
+                }
+            }
 
             return (station, stop, distance1, plan.ToArray());
         }
 
         private (Station station, StationStop stop, float distance, TrajectorySegment plan)? SearchNearestStationAlongTrack(int segmentId, float t,
             SegmentEndpoint dir, float distance, float? currentBest, Queue<(int, float, SegmentEndpoint, float, TrajectorySegment)> backlog,
-            TrajectorySegment predecessor)
+            TrajectorySegment predecessor, bool verbose)
         {
             var seg = GetSegmentById(segmentId);
 
@@ -298,7 +301,11 @@ namespace TSIM.RailroadDatabase
             {
                 if (candidate.Segment1 == segmentId && candidate.Ep1 == dir)
                 {
-//                    Console.WriteLine($"SearchNearestStationAlongTrack: candidate {segmentId},{dir} -> {candidate.Segment2},{candidate.Ep2} ({distanceAtEnd})");
+                    if (verbose)
+                    {
+                        Console.WriteLine(
+                            $"SearchNearestStationAlongTrack: candidate {segmentId},{dir} -> {candidate.Segment2},{candidate.Ep2} ({distanceAtEnd})");
+                    }
 
                     backlog.Enqueue((candidate.Segment2,
                             candidate.Ep2 == SegmentEndpoint.Start ? 0 : 1,
@@ -309,7 +316,11 @@ namespace TSIM.RailroadDatabase
                 }
                 else if (candidate.Segment2 == segmentId && candidate.Ep2 == dir)
                 {
-//                    Console.WriteLine($"SearchNearestStationAlongTrack: candidate {segmentId},{dir} -> {candidate.Segment1},{candidate.Ep1} ({distanceAtEnd})");
+                    if (verbose)
+                    {
+                        Console.WriteLine(
+                            $"SearchNearestStationAlongTrack: candidate {segmentId},{dir} -> {candidate.Segment1},{candidate.Ep1} ({distanceAtEnd})");
+                    }
 
                     backlog.Enqueue((candidate.Segment1,
                             candidate.Ep1 == SegmentEndpoint.Start ? 0 : 1,
