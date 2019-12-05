@@ -32,7 +32,7 @@ namespace TSIM.WebServer.Controllers
                 var filename = "/tmp/tmp.png";
                 var w = 1600;
                 var h = 1000;
-                var scale = 0.070;
+                var scale = 0.150;          // TODO: automatically determine boundaries of view
                 var fontSize = 9;
                 GraphicsOutput.RenderPng(sim.CoordSpace, sim.Network, sim.Units, filename, w, h, scale, fontSize);
 
