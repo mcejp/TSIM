@@ -18,13 +18,15 @@ namespace TSIM
         private readonly SegmentEndpoint[] _dirByUnitId;
         private readonly float[] _tByUnitId;
 
-        private List<IAgent> _agents = new List<IAgent>();
+        private readonly List<IAgent> _agents = new List<IAgent>();
+        private readonly LoggingManager _log;
 
-        public Simulation(SimulationCoordinateSpace coordSpace, INetworkDatabase network, IUnitDatabase units)
+        public Simulation(SimulationCoordinateSpace coordSpace, INetworkDatabase network, IUnitDatabase units, LoggingManager log)
         {
             CoordSpace = coordSpace;
             Network = network;
             Units = units;
+            _log = log;
 
             _currentSegmentByUnitId = new int?[units.GetNumUnits()];
             _dirByUnitId = new SegmentEndpoint[units.GetNumUnits()];
@@ -59,6 +61,8 @@ namespace TSIM
 
         public void Step(double dt)
         {
+            _log.SetSimulatedTime(TimeElapsed.TotalSeconds);
+
             // TODO: do not use Unit.Velocity as authoritative; because we're doing on-rails simulation only
             // (at least for now), it would be more efficient to track scalar speed
 

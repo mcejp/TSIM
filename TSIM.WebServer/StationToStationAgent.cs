@@ -11,7 +11,7 @@ namespace TSIM.WebServer
         private readonly IUnitDatabase _units;
         private readonly ISignalSink _log;
         private readonly int _unitIndex;
-        private readonly int _logPin, _distanceToTargetPin, _forcePin, _velocityPin, _velocityTargetPin;
+        private readonly int _logPin, _distanceToTargetPin, _forcePin, _segmentIdPin, _velocityPin, _velocityTargetPin, _debugPin;
 
         private TrajectorySegment[] _plan;
 
@@ -28,8 +28,10 @@ namespace TSIM.WebServer
             _logPin = _log.GetSignalPin(eh, "implFeed");
             _distanceToTargetPin = _log.GetSignalPin(eh, "distanceToTarget");
             _forcePin = _log.GetSignalPin(eh, "force");
+            _segmentIdPin = _log.GetSignalPin(eh, "segmentId");
             _velocityPin = _log.GetSignalPin(eh, "velocity");
             _velocityTargetPin = _log.GetSignalPin(eh, "velocity(target)");
+            _debugPin = _log.GetSignalPin(eh, "debug");
 
 //            _network.FindNearestStationAlongTrack(33, 0.01897f, SegmentEndpoint.End);
         }
@@ -72,16 +74,22 @@ namespace TSIM.WebServer
                     if (_plan.Length > 1)
                     {
                         _plan = _plan.Skip(1).ToArray();        // FIXME: code smelly smell
+//                        _log.Feed(_logPin, $"Plan advanced; dtt at entry, exit: {current.DistToGoalAtEntry} {current.DistToGoalAtExit}; " +
+//                                           $"unit segmentId={segmentId} t={t} dir={dir}");
                     }
                     else
                     {
                         _plan = null;
+//                        _log.Feed(_logPin, "Plan exhausted");
                     }
 
+                    // Restart plan execution at new segment
                     continue;
                 }
 
                 var distAtEntry = current.DistToGoalAtEntry;
+                // The following caluclation is incorrect, because it assumes that distAtEntry == distance at segment endpoint opposite of exit.
+                // However, if the plan was made while we were already on this segment, distAtEntry will be the distance from our initial position
                 var distToGoal = current.Dir switch {
                     SegmentEndpoint.End => distAtEntry - t * seg.GetLength(),
                     SegmentEndpoint.Start => distAtEntry - (1 - t) * seg.GetLength(),
@@ -124,8 +132,10 @@ namespace TSIM.WebServer
 
             _log.FeedNullable(_distanceToTargetPin, theDistToGoal);
             _log.Feed(_forcePin, force);
+            _log.Feed(_segmentIdPin, segmentId);
             _log.Feed(_velocityTargetPin, targetSpeed);
             _log.Feed(_velocityPin, unit.Velocity.Length());
+            _log.Feed(_debugPin, t);
 
             return (_unitIndex, force);
         }

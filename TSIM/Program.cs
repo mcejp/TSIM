@@ -40,10 +40,13 @@ namespace TSIM
                     // simulate
                     if (o.Simulate)
                     {
+                        var logFileName = o.DbFile + ".csv";
+                        using var log = new LoggingManager(logFileName);
+
                         var sw = new Stopwatch();
                         sw.Restart();
 
-                        var sim = new Simulation(db.GetCoordinateSpace(), db, db);
+                        var sim = new Simulation(db.GetCoordinateSpace(), db, db, log);
                         sim.Units.SetUnitSpeed(0, 50 / 3.6f);
 
                         var steps = 50;

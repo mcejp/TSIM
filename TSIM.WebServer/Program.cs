@@ -1,14 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using TSIM.RailroadDatabase;
 
 namespace TSIM.WebServer
@@ -19,18 +15,20 @@ namespace TSIM.WebServer
 
         public static void Main(string[] args)
         {
+            // Doing this "properly" is super crap. (Why again?)
+            string workDir = File.Exists("work/simdb.sqlite") ? "work" : "../work";
+
             // 0. init internals
-            var log = new LoggingManager();
+            using var log = new LoggingManager(Path.Join(workDir, "simlog.csv"));
             var cp = new LoggingManager.ClassPolicy(acceptByDefault: false, acceptId: new int[] {0});
 //            cp.SetThrottleRate(1);
             log.SetClassPolicy(typeof(StationToStationAgent), cp);
 
             // 1. open pre-initialized DB
-            // Doing this "properly" is super crap. (Why again?)
-            var db = SqliteSimDatabase.Open(File.Exists("work/simdb.sqlite") ? "work/simdb.sqlite" : "../work/simdb.sqlite");
+            var db = SqliteSimDatabase.Open(Path.Join(workDir, "simdb.sqlite"));
 
             // 2. simulate
-            var sim = new Simulation(db.GetCoordinateSpace(), db, db);
+            var sim = new Simulation(db.GetCoordinateSpace(), db, db, log);
 
             // 3. add agents
             for (int unitIndex = 0; unitIndex < db.GetNumUnits(); unitIndex++)
