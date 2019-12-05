@@ -89,7 +89,7 @@ namespace TSIM
                 var speed = unit.Velocity.Length();
 
                 // Calculate new unit speed based on force
-                var newSpeed = speed + forceByUnitIndex[unitIndex] / unit.Class.Mass;
+                var newSpeed = (float)(speed + (forceByUnitIndex[unitIndex] / unit.Class.Mass) * dt);
 
                 // Update unit position based on velocity
                 // If unit is on rail, it should stay snapped

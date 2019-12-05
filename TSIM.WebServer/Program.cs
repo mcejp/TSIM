@@ -49,7 +49,7 @@ namespace TSIM.WebServer
 
         private static void Simulate(Simulation sim)
         {
-            const int simStepMs = 1000;
+            const int simStepMs = 200;
 
             var sw = new Stopwatch();
 
