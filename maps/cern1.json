@@ -3,6 +3,6 @@
   "networkDatabase": "cern1.geojson",
   "unitClassDatabase": "../data/classes.json",
   "units": [
-    {"class": "generic", "pos": [-1005.2,    36.3,   0.0], "orientation": [ 0.000,  0.000, -0.398, 0.917], "segId": 1}
+    {"class": "generic", "pos": [-1022.4,    69.6,   0.0], "orientation": [ 0.000,  0.000, -0.607, 0.795], "segId": 1}
   ]
 }
