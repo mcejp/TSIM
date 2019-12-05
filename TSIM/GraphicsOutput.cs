@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using Cairo;
@@ -42,6 +43,7 @@ namespace TSIM
         private static void RenderToContext(SimulationCoordinateSpace coordinateSpace,
             INetworkDatabase ndb,
             IUnitDatabase units,
+            IEnumerable<IAgent> agents,
             Context cr,
             PointD center,
             double scale, int fontSize)
@@ -119,6 +121,18 @@ namespace TSIM
 
                 cr.SetSourceColor(chameleon3);
                 DrawTextBold(cr, $"{unit.Class.Name}\n{unit.Velocity.Length() * 3.6:F1} km/h", posCS, fontSize);
+            }
+
+            // Draw info about agents
+            if (agents != null)
+            {
+                int i = 0;
+
+                foreach (var agent in agents)
+                {
+                    DrawTextRegular(cr, agent.ToString(), new PointD(0, i * 10), 9);
+                    i++;
+                }
             }
 
             cr.LineWidth = 1;
@@ -204,7 +218,7 @@ namespace TSIM
             var surf = new SvgSurface(filename, w, h);
             Context cr = new Context(surf);
 
-            RenderToContext(coordinateSpace, ndb, units, cr, center, scale, fontSize);
+            RenderToContext(coordinateSpace, ndb, units, null, cr, center, scale, fontSize);
 
             cr.Dispose();
             surf.Flush();
@@ -215,6 +229,7 @@ namespace TSIM
         public static void RenderPng(SimulationCoordinateSpace coordinateSpace,
             INetworkDatabase ndb,
             IUnitDatabase units,
+            IEnumerable<IAgent>? agents,
             string filename,
             int w, int h,
             double scale, int fontSize)
@@ -224,7 +239,7 @@ namespace TSIM
             var surf = new ImageSurface(Format.Argb32, w, h);
             Context cr = new Context(surf);
 
-            RenderToContext(coordinateSpace, ndb, units, cr, center, scale, fontSize);
+            RenderToContext(coordinateSpace, ndb, units, agents, cr, center, scale, fontSize);
 
             cr.Dispose();
             surf.WriteToPng(filename);

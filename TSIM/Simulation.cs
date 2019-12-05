@@ -13,6 +13,7 @@ namespace TSIM
         public SimulationCoordinateSpace CoordSpace { get; private set; }
         public INetworkDatabase Network { get; private set; }
         public IUnitDatabase Units { get; private set; }
+        public IEnumerable<IAgent> Agents => _agents;
 
         private readonly int?[] _currentSegmentByUnitId;
         private readonly SegmentEndpoint[] _dirByUnitId;

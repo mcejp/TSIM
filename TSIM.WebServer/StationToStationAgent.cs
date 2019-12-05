@@ -13,7 +13,11 @@ namespace TSIM.WebServer
         private readonly int _unitIndex;
         private readonly int _logPin, _distanceToTargetPin, _forcePin, _segmentIdPin, _velocityPin, _velocityTargetPin, _debugPin;
 
-        private TrajectorySegment[] _plan;
+        private TrajectorySegment[]? _plan;
+        private Station? _planStation;
+
+        private float? _lastDistanceToGoal;
+        private float? _lastEstimatedSecondsToGoal;
 
 //        private DateTime _lastReport;
 
@@ -58,6 +62,7 @@ namespace TSIM.WebServer
                 {
                     var (station, stop, distance, plan) = nearest.Value;
                     _log.Feed(_logPin, $"Set goal: station {station.Name}, {distance:F0} m away");
+                    _planStation = station;
                     _plan = plan;
                 }
                 else
@@ -69,6 +74,7 @@ namespace TSIM.WebServer
 
             float targetSpeed = 0;
             float? theDistToGoal = null;
+            float? estimatedSecondsToGoal = null;
 
             while (_plan != null)
             {
@@ -103,6 +109,7 @@ namespace TSIM.WebServer
                 if (distToGoal <= 0)
                 {
                     // We have reached or missed the goal
+                    // TODO: log predicted vs arrived time
 
                     if (_plan.Length > 1)
                     {
@@ -124,6 +131,8 @@ namespace TSIM.WebServer
                 //  - less than 100 meters away -> target speed ramp to 10 m/s
                 //  - less than 740 meters away: target speed ramp to 80 km/h, and saturate there
                 // Note that at the moment, we currently need to pass the goal, before route to the next stop is calculated.
+                float maxSpeed = 80.0f / 3.6f;
+
                 if (distToGoal < 1)
                 {
                     targetSpeed = 1.0f;
@@ -134,8 +143,11 @@ namespace TSIM.WebServer
                 }
                 else
                 {
-                    targetSpeed = Math.Min(10 + (distToGoal - 100) * 0.03f, 80 / 3.6f);
+                    targetSpeed = Math.Min(10 + (distToGoal - 100) * 0.03f, maxSpeed);
                 }
+
+                // Very rough ETA -- 30 seconds + distance over max speed
+                estimatedSecondsToGoal = 30 + theDistToGoal / maxSpeed;
 
                 break;
             }
@@ -152,7 +164,27 @@ namespace TSIM.WebServer
             _log.Feed(_velocityPin, unit.Velocity.Length());
             _log.Feed(_debugPin, t);
 
+            _lastDistanceToGoal = theDistToGoal;
+            _lastEstimatedSecondsToGoal = estimatedSecondsToGoal;
+
             return (_unitIndex, force);
+        }
+
+        public override string ToString()
+        {
+            var unit = _units.GetUnitByIndex(_unitIndex);
+
+            if (_lastDistanceToGoal != null)
+            {
+                var eta = (_lastEstimatedSecondsToGoal != null) ? (DateTime.Now + TimeSpan.FromSeconds(_lastEstimatedSecondsToGoal.Value)) : (DateTime?)null;
+
+                return $"StationToStationAgent#{_unitIndex}: next stop {_planStation?.Name}, {_lastDistanceToGoal:F0} meters, " +
+                       $"{unit.Velocity.Length() * 3.6:F1} km/h, ETA {eta:HH:mm:ss}";
+            }
+            else
+            {
+                return $"StationToStationAgent#{_unitIndex}: no goal";
+            }
         }
     }
 }
