@@ -60,6 +60,11 @@ namespace TSIM.WebServer
                     _log.Feed(_logPin, $"Set goal: station {station.Name}, {distance:F0} m away");
                     _plan = plan;
                 }
+                else
+                {
+                    _log.Feed(_logPin, $"Cannot find any station; segmentId={segmentId} t={t} dir={dir}");
+                    // FIXME: There is no throttle on calling FindNearestStationAlongTrack!
+                }
             }
 
             float targetSpeed = 0;
@@ -123,12 +128,6 @@ namespace TSIM.WebServer
             int maxBrake = 2_000_000;
             var force = (targetSpeed - unit.Velocity.Length()) * 200_000;
             force = Math.Min(Math.Max(force, -maxBrake), maxAccelerate);
-
-//            if (_tracked && DateTime.Now - _lastReport > TimeSpan.FromSeconds(1))
-//            {
-//                Console.WriteLine($"Distance to goal is {theDistToGoal} m; velocity {unit.Velocity.Length()} / {targetSpeed}; force {force} N");
-//                _lastReport = DateTime.Now;
-//            }
 
             _log.FeedNullable(_distanceToTargetPin, theDistToGoal);
             _log.Feed(_forcePin, force);

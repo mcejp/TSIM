@@ -126,7 +126,7 @@ namespace TSIM
 
         private void Flush()
         {
-            Console.WriteLine($"CsvLog: Flushing {_sb.Length} bytes");
+//            Console.WriteLine($"CsvLog: Flushing {_sb.Length} bytes");
 
             _output.Write(_sb.ToString());
             _output.Flush();
