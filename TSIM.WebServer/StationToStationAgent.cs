@@ -119,14 +119,30 @@ namespace TSIM.WebServer
                 theDistToGoal = distToGoal;
 
                 // Control loop towards objective
-                targetSpeed = Math.Min(distToGoal * 0.07f, 50 / 3.6f);
+                // The curve is like this:
+                //  - less than 1 meter away -> target speed 1 m/s
+                //  - less than 100 meters away -> target speed ramp to 10 m/s
+                //  - less than 740 meters away: target speed ramp to 80 km/h, and saturate there
+                // Note that at the moment, we currently need to pass the goal, before route to the next stop is calculated.
+                if (distToGoal < 1)
+                {
+                    targetSpeed = 1.0f;
+                }
+                else if (distToGoal < 100)
+                {
+                    targetSpeed = 1.0f + (distToGoal - 1) * (9.0f / 99.0f);
+                }
+                else
+                {
+                    targetSpeed = Math.Min(10 + (distToGoal - 100) * 0.03f, 80 / 3.6f);
+                }
 
                 break;
             }
 
             int maxAccelerate = 1_000_000;
             int maxBrake = 2_000_000;
-            var force = (targetSpeed - unit.Velocity.Length()) * 200_000;
+            var force = (targetSpeed - unit.Velocity.Length()) * 500_000;
             force = Math.Min(Math.Max(force, -maxBrake), maxAccelerate);
 
             _log.FeedNullable(_distanceToTargetPin, theDistToGoal);
