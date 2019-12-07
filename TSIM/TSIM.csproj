@@ -9,13 +9,11 @@
 
     <ItemGroup>
       <ProjectReference Include="..\TSIM.RailroadDatabase\TSIM.RailroadDatabase.csproj" />
-      <Reference Include="..\GtkSharp\BuildOutput\Release\CairoSharp.dll" />
-      <Reference Include="..\GtkSharp\BuildOutput\Release\GLibSharp.dll" />
-      <Reference Include="..\GtkSharp\BuildOutput\Release\PangoSharp.dll" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="CommandLineParser" Version="2.6.0" />
+      <PackageReference Include="GtkSharp" Version="3.22.25.56" />
     </ItemGroup>
 
 </Project>
