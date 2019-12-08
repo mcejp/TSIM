@@ -274,6 +274,7 @@ namespace TSIM.RailroadDatabase
                 {
                     currentBest = stopDistance;
                     // FIXME: shite shite shite aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                    // this will return a different Station instance every time, which breaks equality comparison in StationToStationAgent
                     best = (stop.Station.ToModel(), stop.ToModel(), stopDistance,
                         new TrajectorySegment(predecessor, segmentId, dir, distance, stopDistance));
                 }
