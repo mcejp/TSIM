@@ -1,22 +1,8 @@
-dist: xenial
-addons:
-  snaps:
-    - name: dotnet-sdk
-      classic: true
-      channel: 3.0/stable
-sudo: required
 language: csharp
-mono: latest
-dotnet: 2.0.0
+dotnet: 3.0.101
+mono: none
 
-# dotnet 2 gets installed as /usr/bin/dotnet
-# dotnet 3 gets installed as /snap/bin/dotnet
 script:
-  - sudo snap alias dotnet-sdk.dotnet dotnet
-  - dotnet --version
-  - which dotnet
-  - cd GtkSharp && ./build.sh && cd ..
-  - /snap/bin/dotnet build TSIM.sln
-  - /snap/bin/dotnet test --verbosity d TSIM.Tests/TSIM.Tests.csproj
-# Does not work for the moment -- probably because gtk libraries including Cairo are missing on the CI server
-#  - time /snap/bin/dotnet run --project TSIM/TSIM.csproj -- simdb.sqlite --importscenario data/scenario.json --simulate --rendersvg output.svg
+  - dotnet build TSIM.sln
+  - dotnet test TSIM.Tests/TSIM.Tests.csproj
+  - time dotnet run --project TSIM/TSIM.csproj -- simdb.sqlite --importscenario data/scenario.json --simulate --rendersvg output.svg
