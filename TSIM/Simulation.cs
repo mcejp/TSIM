@@ -8,11 +8,11 @@ namespace TSIM
 {
     public class Simulation
     {
-        public TimeSpan TimeElapsed { get; private set; }
+        private TimeSpan _simTimeElapsed;
 
-        public SimulationCoordinateSpace CoordSpace { get; private set; }
-        public INetworkDatabase Network { get; private set; }
-        public IUnitDatabase Units { get; private set; }
+        public SimulationCoordinateSpace CoordSpace { get; }
+        public INetworkDatabase Network { get; }
+        public IUnitDatabase Units { get; }
         public IEnumerable<IAgent> Agents => _agents;
 
         private readonly int?[] _currentSegmentByUnitId;
@@ -62,7 +62,7 @@ namespace TSIM
 
         public void Step(double dt)
         {
-            _log.SetSimulatedTime(TimeElapsed.TotalSeconds);
+            _log.SetSimulatedTime(_simTimeElapsed.TotalSeconds);
 
             // TODO: do not use Unit.Velocity as authoritative; because we're doing on-rails simulation only
             // (at least for now), it would be more efficient to track scalar speed
@@ -199,7 +199,7 @@ namespace TSIM
 //                Console.WriteLine($"Unit {unitIndex} update: pos {unit.Pos} velocity {unit.Velocity}");
             }
 
-            TimeElapsed += TimeSpan.FromSeconds(dt);
+            _simTimeElapsed += TimeSpan.FromSeconds(dt);
         }
     }
 }

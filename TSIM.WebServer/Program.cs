@@ -11,7 +11,18 @@ namespace TSIM.WebServer
 {
     public class Program
     {
-        public static Simulation uglyGlobalSimulation;        // Why global?
+        public static Simulation uglyGlobalSimulation;        // Global because HomeController uses it
+
+        private readonly LoggingManager _log;
+        private readonly int _perfPin;
+
+        public Program(LoggingManager log)
+        {
+            _log = log;
+
+            var eh = log.GetEntityHandle(typeof(Program), -1);
+            _perfPin = log.GetSignalPin(eh, "timeUtilization");
+        }
 
         public static void Main(string[] args)
         {
@@ -41,13 +52,16 @@ namespace TSIM.WebServer
             }
 
             uglyGlobalSimulation = sim;
-            Task.Run(() => Simulate(sim));
+
+            var p = new Program(log);
+            Task.Run(() => p.Simulate(sim));
 
             // now start web server
             CreateHostBuilder(args).Build().Run();
         }
 
-        private static void Simulate(Simulation sim)
+        // TODO: maybe factor this out into a "RealtimeSimulationContext" or something
+        private void Simulate(Simulation sim)
         {
             const int simStepMs = 200;
 
@@ -71,9 +85,11 @@ namespace TSIM.WebServer
                 simTimeSinceLastReportMs += simStepMs;
                 realTimeSinceLastReportMs += realTimeMs;
 
-                if (DateTime.Now > lastReport + TimeSpan.FromSeconds(10))
+                if (DateTime.Now > lastReport + TimeSpan.FromSeconds(1))
                 {
-                    Console.WriteLine($"Took {realTimeSinceLastReportMs * 0.001:F2} s to simulate {simTimeSinceLastReportMs * 0.001:F2} s");
+//                    Console.WriteLine($"Took {realTimeSinceLastReportMs * 0.001:F2} s to simulate {simTimeSinceLastReportMs * 0.001:F2} s");
+                    _log.Feed(_perfPin, (float) realTimeSinceLastReportMs / simTimeSinceLastReportMs);
+
                     lastReport = DateTime.Now;
                     simTimeSinceLastReportMs = 0;
                     realTimeSinceLastReportMs = 0;
