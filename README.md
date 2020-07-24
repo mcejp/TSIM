@@ -12,11 +12,21 @@ Transport simulation playground
    The trains are just programmed to try and stop at the closest station until better control architecture
    is implemented.
 
+### Other IDEs (VS Code), command line
+
+    mkdir -p work
+    dotnet run --project TSIM/TSIM.csproj -- work/simdb.sqlite \
+            --importscenario maps/cern1.json \
+            --simulate \
+            --rendersvg work/output.svg
+    dotnet run --project TSIM.WebServer/TSIM.WebServer.csproj
+
+   # alternatively, to be reachable from the internet
+   dotnet run --project TSIM.WebServer/TSIM.WebServer.csproj --launch-profile Production --urls http://0.0.0.0:5000\;https://0.0.0.0:5001
+
 ## How to run tests
 
-```sh
-/opt/dotnet-sdk-3.0.100-linux-x64/dotnet test TSIM.Tests/TSIM.Tests.csproj
-```
+   dotnet test TSIM.Tests/TSIM.Tests.csproj
 
 ## Extracting dataset (Praha subway)
 
@@ -27,3 +37,8 @@ osmosis --read-pbf praha-latest.osm.pbf \
         --write-xml praha-subway.osm
 
 Then import OSM into QGIS... and do what?
+
+## Installing .NET Core
+
+- CentOS 8: `sudo dnf install dotnet-sdk-3.1` per [this link](https://docs.microsoft.com/en-us/dotnet/core/install/linux-centos)
+- Other: [see here](https://dotnet.microsoft.com/download/dotnet-core/3.1)

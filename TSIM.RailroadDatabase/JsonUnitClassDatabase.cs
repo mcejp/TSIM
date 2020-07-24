@@ -34,12 +34,14 @@ namespace TSIM.RailroadDatabase
     public class UnitClassModel
     {
         [JsonProperty("name")] public string Name { get; set; }
-        [JsonProperty("mass")] public float Mass { get; set; }
-        [JsonProperty("dimensions"), JsonConverter(typeof(Vector3Converter))] public Vector3 Dimensions { get; set; }
+        [JsonProperty("accel_max")] public float AccelMax { get; set; }
+        [JsonProperty("decel_max")] public float DecelMax { get; set; }
+        [JsonProperty("velocity_max")] public float VelocityMax { get; set; }
+        // [JsonProperty("dimensions"), JsonConverter(typeof(Vector3Converter))] public Vector3 Dimensions { get; set; }
 
         public UnitClass ToModel()
         {
-            return new UnitClass(Name, Mass, Dimensions);
+            return new UnitClass(Name, AccelMax, DecelMax, VelocityMax);
         }
     }
 

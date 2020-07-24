@@ -13,7 +13,7 @@ namespace TSIM.WebServer
         private readonly IUnitDatabase _units;
         private readonly ISignalSink _log;
         private readonly int _unitIndex;
-        private readonly int _logPin, _distanceToTargetPin, _accelerationForcePin, _brakingForcePin, _segmentIdPin, _velocityPin, _velocityTargetPin, _debugPin;
+        private readonly int _logPin, _distanceToTargetPin, _accelerationPin, _segmentIdPin, _velocityPin, _velocityTargetPin, _debugPin;
 
         private State _state = State.IDLE;
         private TrajectorySegment[]? _plan;
@@ -35,8 +35,7 @@ namespace TSIM.WebServer
             var eh = _log.GetEntityHandle(typeof(StationToStationAgent), unitIndex);
             _logPin = _log.GetSignalPin(eh, "implFeed");
             _distanceToTargetPin = _log.GetSignalPin(eh, "distanceToTarget");
-            _accelerationForcePin = _log.GetSignalPin(eh, "accelerationForce");
-            _brakingForcePin = _log.GetSignalPin(eh, "brakingForce");
+            _accelerationPin = _log.GetSignalPin(eh, "acceleration");
             _segmentIdPin = _log.GetSignalPin(eh, "segmentId");
             _velocityPin = _log.GetSignalPin(eh, "velocity");
             _velocityTargetPin = _log.GetSignalPin(eh, "velocity(target)");
@@ -45,16 +44,21 @@ namespace TSIM.WebServer
 //            _network.FindNearestStationAlongTrack(1, 0.05f, SegmentEndpoint.Start, true);
         }
 
-        public (int, float, float) Step(Simulation sim, double dt)
+        public (int, float) Step(Simulation sim, double dt)
         {
+            // TODO: precisely describe this shitcode
+
             // What is the current objective?
             var unit = _units.GetUnitByIndex(_unitIndex);
             var velocity = unit.Velocity.Length();
 
             var (segmentId, t, dir) = sim.GetUnitTrackState(_unitIndex);
 
-            float commandedVelocity = 0;
+            float acceleration = 0;  // probably instead we should create an intermediate low-level goal (e.g. STOP AFTER xx METERS)
+
             float maxVelocity = 80.0f / 3.6f;
+            float maxAccel = 1.0f;
+            float maxDecel = 1.3f;
 
             float? theDistToGoal = null;
 
@@ -123,7 +127,7 @@ namespace TSIM.WebServer
                                     {
                                         _log.Feed(_logPin, $"Approaching {_planStation.Name}, stopping. Next station will be {station.Name}, {distance:F0} meters.");
                                         _state = State.APPROACHING;
-                                        commandedVelocity = 0.0f;
+                                        acceleration = TrainModel_AccelerationToFullyStopNow(dt, velocity);
                                         break;
                                     }
                                 }
@@ -157,7 +161,7 @@ namespace TSIM.WebServer
                                 _plan = null;
 
                                 _state = State.APPROACHING;
-                                commandedVelocity = 0.0f;
+                                acceleration = TrainModel_AccelerationToFullyStopNow(dt, velocity);
                                 break;
                             }
 
@@ -172,23 +176,9 @@ namespace TSIM.WebServer
                         theDistToGoal = distToGoal;
 
                         // Control loop towards objective
-                        // The curve is like this:
-                        //  - less than 1 meter away -> target speed 1 m/s
-                        //  - less than 100 meters away -> target speed ramp to 10 m/s
-                        //  - less than 740 meters away: target speed ramp to 80 km/h, and saturate there
-                        // Note that at the moment, we currently need to pass the goal, before route to the next stop is calculated.
-                        if (distToGoal < 1)
-                        {
-                            commandedVelocity = 1.0f;
-                        }
-                        else if (distToGoal < 100)
-                        {
-                            commandedVelocity = 1.0f + (distToGoal - 1) * (9.0f / 99.0f);
-                        }
-                        else
-                        {
-                            commandedVelocity = Math.Min(10 + (distToGoal - 100) * 0.03f, maxVelocity);
-                        }
+                        // Artificially increase distance to objective because we actually need to stop after it to register properly
+                        // (this is a quirk, not a desirable behavior)
+                        acceleration = TrainModel_AccelerationToFullyStopAfter(velocity, distToGoal + 1.0f, maxAccel, maxDecel);
 
                         break;
                     }
@@ -202,7 +192,7 @@ namespace TSIM.WebServer
                         _boardingTimer = 10.0;
                     }
 
-                    commandedVelocity = 0;
+                    acceleration = TrainModel_AccelerationToFullyStopNow(dt, velocity);
                     break;
 
                 case State.BOARDING:
@@ -216,39 +206,16 @@ namespace TSIM.WebServer
                     break;
             }
 
-            int maxAccelerate = 1_000_000;
-            int maxBrake = 2_000_000;
-
-            var controller_P = 500_000;
-            float accelerationForce = (commandedVelocity > velocity) ? Math.Min((commandedVelocity - velocity) * controller_P, maxAccelerate) : 0;
-
-            float brakingForce;
-
-            // TODO: This is all wrong. Braking force should *increase* as velocity decreases (because friction should be simulated as proportional to velocity)
-            if (commandedVelocity > velocity)               // Accelerating
-            {
-                brakingForce = 0;
-            }
-            else if (commandedVelocity > Single.Epsilon)    // Slowing down
-            {
-                brakingForce = Math.Min((velocity - commandedVelocity) * 500_000, maxBrake);
-            }
-            else                                            // Full stop desired
-            {
-                brakingForce = maxBrake;
-            }
-
             _log.FeedNullable(_distanceToTargetPin, theDistToGoal);
-            _log.Feed(_accelerationForcePin, accelerationForce);
-            _log.Feed(_brakingForcePin, brakingForce);
+            _log.Feed(_accelerationPin, acceleration);
             _log.Feed(_segmentIdPin, segmentId);
-            _log.Feed(_velocityTargetPin, commandedVelocity);
+            // _log.Feed(_velocityTargetPin, commandedVelocity);
             _log.Feed(_velocityPin, velocity);
             _log.Feed(_debugPin, t);
 
             _lastDistanceToGoal = theDistToGoal;
 
-            return (_unitIndex, accelerationForce, brakingForce);
+            return (_unitIndex, acceleration);
         }
 
         public override string ToString()
@@ -286,6 +253,29 @@ namespace TSIM.WebServer
             }
 
             return str;
+        }
+
+        private static float TrainModel_AccelerationToFullyStopAfter(float v, float distToGoal, float accelMax, float decelNom)
+        {
+            // TODO: and if distToGoal is 0 / negative ?
+
+            float v1 = (float) Math.Sqrt(2 * distToGoal * decelNom);
+
+            if (v1 > v + 0.2) { // ayyy random threshold
+                // better solution needed obviously
+                return accelMax;
+            }
+            else if (v1 < v) {
+                return -v * v / (2 * distToGoal);
+            }
+            else {
+                return 0;       // whatever
+            }
+        }
+
+        private static float TrainModel_AccelerationToFullyStopNow(double dt, float v)
+        {
+            return (float)(-v / dt);
         }
     }
 }

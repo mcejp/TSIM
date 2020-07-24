@@ -6,15 +6,18 @@ namespace TSIM.Model
     {
         public readonly string Name;
 
-        public readonly float Mass;
+        public readonly float AccelMax;
 
-        public readonly Vector3 Dimensions;
+        public readonly float DecelMax;
 
-        public UnitClass(string name, float mass, Vector3 dimensions)
+        public readonly float VelocityMax;
+
+        public UnitClass(string name, float accelMax, float decelMax, float velocityMax)
         {
             Name = name;
-            Mass = mass;
-            Dimensions = dimensions;
+            AccelMax = accelMax;
+            DecelMax = decelMax;
+            VelocityMax = velocityMax;
         }
     }
 }

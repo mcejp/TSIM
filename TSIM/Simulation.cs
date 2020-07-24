@@ -67,15 +67,13 @@ namespace TSIM
             // TODO: do not use Unit.Velocity as authoritative; because we're doing on-rails simulation only
             // (at least for now), it would be more efficient to track scalar speed
 
-            var accelerationForceByUnitIndex = new float[Units.GetNumUnits()];
-            var brakingForceByUnitIndex = new float[Units.GetNumUnits()];
+            var accelerationByUnitIndex = new float[Units.GetNumUnits()];
 
             foreach (var agent in _agents)
             {
-                var (unitIndex, accelerationForce, brakingForce) = agent.Step(this, dt);
+                var (unitIndex, acceleration) = agent.Step(this, dt);
 
-                accelerationForceByUnitIndex[unitIndex] = accelerationForce;
-                brakingForceByUnitIndex[unitIndex] = brakingForce;
+                accelerationByUnitIndex[unitIndex] = acceleration;
             }
 
             for (var unitIndex = 0; unitIndex < Units.GetNumUnits(); unitIndex++)
@@ -91,18 +89,12 @@ namespace TSIM
                 var unit = Units.GetUnitByIndex(unitIndex);
                 var speed = unit.Velocity.Length();
 
-                // Calculate these separately to avoid overshoot into the negative when braking
-                // FIXME: all of this is very rough and not physically correct
-                var acceleration = accelerationForceByUnitIndex[unitIndex] / unit.Class.Mass;
+                var acceleration = accelerationByUnitIndex[unitIndex];
 
                 double newSpeed = speed + acceleration * dt;
-                var deceleration = -brakingForceByUnitIndex[unitIndex] / unit.Class.Mass * Math.Sign(newSpeed);
 
-                if (Math.Sign(newSpeed) == Math.Sign(newSpeed + deceleration * dt))
-                {
-                    newSpeed = newSpeed + deceleration * dt;
-                }
-                else
+                // Avoid overshoot into the negative when braking
+                if (Math.Abs(speed) > float.Epsilon && Math.Sign(newSpeed) != Math.Sign(speed))
                 {
                     newSpeed = 0;
                 }
