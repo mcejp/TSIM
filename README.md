@@ -1,7 +1,7 @@
-# TSIM ![CI status](https://travis-ci.com/cejpmart/TSIM.svg?branch=develop)
+# TSIM ![CI status](https://travis-ci.com/mcejp/TSIM.svg?branch=develop)
 Transport simulation playground
 
-![screenshot](https://github.com/cejpmart/TSIM/blob/develop/screenshots/output.svg)
+![screenshot](https://github.com/mcejp/TSIM/blob/develop/screenshots/output.svg)
 
 ## How to run (real-time mode)
 
@@ -21,8 +21,12 @@ Transport simulation playground
             --rendersvg work/output.svg
     dotnet run --project TSIM.WebServer/TSIM.WebServer.csproj
 
-   # alternatively, to be reachable from the internet
-   dotnet run --project TSIM.WebServer/TSIM.WebServer.csproj --launch-profile Production --urls http://0.0.0.0:5000\;https://0.0.0.0:5001
+    # alternatively, to be reachable from the internet
+    dotnet run --project TSIM.WebServer/TSIM.WebServer.csproj --launch-profile Production --urls http://0.0.0.0:5000\;https://0.0.0.0:5001
+
+### Visualizing data post-mortem
+
+Use the provided Jupyter notebook to load and visualize the generated _simlog.csv_.
 
 ## How to run tests
 
