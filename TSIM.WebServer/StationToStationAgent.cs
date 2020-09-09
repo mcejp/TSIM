@@ -127,7 +127,7 @@ namespace TSIM.WebServer
                                     {
                                         _log.Feed(_logPin, $"Approaching {_planStation.Name}, stopping. Next station will be {station.Name}, {distance:F0} meters.");
                                         _state = State.APPROACHING;
-                                        acceleration = TrainModel_AccelerationToFullyStopNow(dt, velocity);
+                                        acceleration = TrainModel_AccelerationToFullyStopNow(dt, velocity, maxDecel);
                                         break;
                                     }
                                 }
@@ -161,7 +161,7 @@ namespace TSIM.WebServer
                                 _plan = null;
 
                                 _state = State.APPROACHING;
-                                acceleration = TrainModel_AccelerationToFullyStopNow(dt, velocity);
+                                acceleration = TrainModel_AccelerationToFullyStopNow(dt, velocity, maxDecel);
                                 break;
                             }
 
@@ -178,7 +178,7 @@ namespace TSIM.WebServer
                         // Control loop towards objective
                         // Artificially increase distance to objective because we actually need to stop after it to register properly
                         // (this is a quirk, not a desirable behavior)
-                        acceleration = TrainModel_AccelerationToFullyStopAfter(velocity, distToGoal + 1.0f, maxAccel, maxDecel);
+                        acceleration = TrainModel_AccelerationToFullyStopAfter(velocity, distToGoal + 1.0f, maxAccel, maxDecel, maxVelocity);
 
                         break;
                     }
@@ -192,7 +192,7 @@ namespace TSIM.WebServer
                         _boardingTimer = 10.0;
                     }
 
-                    acceleration = TrainModel_AccelerationToFullyStopNow(dt, velocity);
+                    acceleration = TrainModel_AccelerationToFullyStopNow(dt, velocity, maxDecel);
                     break;
 
                 case State.BOARDING:
@@ -255,15 +255,15 @@ namespace TSIM.WebServer
             return str;
         }
 
-        private static float TrainModel_AccelerationToFullyStopAfter(float v, float distToGoal, float accelMax, float decelNom)
+        private static float TrainModel_AccelerationToFullyStopAfter(float v, float distToGoal, float accelMax, float decelNom, float maxVelocity)
         {
             // TODO: and if distToGoal is 0 / negative ?
 
-            float v1 = (float) Math.Sqrt(2 * distToGoal * decelNom);
+            float v1 = Math.Min((float) Math.Sqrt(2 * distToGoal * decelNom), maxVelocity);
 
-            if (v1 > v + 0.2) { // ayyy random threshold
+            if (v1 > v) { // ayyy random threshold
                 // better solution needed obviously
-                return accelMax;
+                return Math.Min(v1 - v, accelMax);
             }
             else if (v1 < v) {
                 return -v * v / (2 * distToGoal);
@@ -273,9 +273,9 @@ namespace TSIM.WebServer
             }
         }
 
-        private static float TrainModel_AccelerationToFullyStopNow(double dt, float v)
+        private static float TrainModel_AccelerationToFullyStopNow(double dt, float v, float decelMax)
         {
-            return (float)(-v / dt);
+            return -decelMax;
         }
     }
 }

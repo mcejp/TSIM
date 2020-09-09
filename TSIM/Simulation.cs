@@ -91,13 +91,8 @@ namespace TSIM
 
                 var acceleration = accelerationByUnitIndex[unitIndex];
 
-                double newSpeed = speed + acceleration * dt;
-
-                // Avoid overshoot into the negative when braking
-                if (Math.Abs(speed) > float.Epsilon && Math.Sign(newSpeed) != Math.Sign(speed))
-                {
-                    newSpeed = 0;
-                }
+                // It is not allowed to accelerate backwards (since we are already lumping acceleration + braking into one variable)
+                double newSpeed = Math.Max(0, speed + acceleration * dt);
 
                 // Update unit position based on velocity
                 // If unit is on rail, it should stay snapped
