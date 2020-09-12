@@ -34,7 +34,7 @@ namespace TSIM.WebServer.Controllers
                 var h = 1000;
                 var scale = 0.150;          // TODO: automatically determine boundaries of view
                 var fontSize = 9;
-                GraphicsOutput.RenderPng(sim.CoordSpace, sim.Network, sim.Units, sim.Agents, filename, w, h, scale, fontSize);
+                GraphicsOutput.RenderPng(sim.CoordSpace, sim.Network, sim.Units, sim.GetControllerMap(), filename, w, h, scale, fontSize);
 
                 byte[] filedata = System.IO.File.ReadAllBytes(filename);
                 string contentType = "image/png";
@@ -43,16 +43,16 @@ namespace TSIM.WebServer.Controllers
             }
         }
 
-        [HttpPost]
-        public void UnitSpeedSet([FromBody] UnitSpeedSetOptions options)
-        {
-            var sim = Program.uglyGlobalSimulation;
+        // [HttpPost]
+        // public void UnitSpeedSet([FromBody] UnitSpeedSetOptions options)
+        // {
+        //     var sim = Program.uglyGlobalSimulation;
 
-            lock (sim)
-            {
-                sim.Units.SetUnitSpeed(options.unit, Math.Max(0, options.speed));
-            }
-        }
+        //     lock (sim)
+        //     {
+        //         sim.Units.SetUnitSpeed(options.unit, Math.Max(0, options.speed));
+        //     }
+        // }
 
         public class UnitSpeedSetOptions
         {

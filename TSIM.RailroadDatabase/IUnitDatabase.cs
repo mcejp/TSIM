@@ -10,10 +10,6 @@ namespace TSIM.RailroadDatabase
 
         int GetNumUnits();
         ref Unit GetUnitByIndex(int unitIndex);
-        /**
-         * @deprecated this is idiot. dont use ever
-         */
-        void SetUnitSpeed(int id, float speed);
         void UpdateUnitByIndex(int unitIndex, Unit unit);
     }
 }

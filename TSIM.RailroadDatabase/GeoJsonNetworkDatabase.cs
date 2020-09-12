@@ -136,6 +136,10 @@ namespace TSIM.RailroadDatabase
             return _segments[id - 1];
         }
 
+        public Station GetStationById(int id) {
+            throw new NotImplementedException();
+        }
+
         private float ProcessTracks(JsonElement featureCollection, List<Segment> segments)
         {
             Trace.Assert(featureCollection.GetProperty("type").GetString().Equals("FeatureCollection"));
@@ -246,7 +250,7 @@ namespace TSIM.RailroadDatabase
 
                 if (!stations.TryGetValue(stationName, out st))
                 {
-                    st = new Station(stationName);
+                    st = new Station(stations.Count, stationName);
                     stations[st.Name] = st;
                 }
 

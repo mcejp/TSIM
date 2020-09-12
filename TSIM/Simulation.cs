@@ -6,6 +6,11 @@ using TSIM.RailroadDatabase;
 
 namespace TSIM
 {
+    struct UnitProperties {
+        public TrainControlStack Controller;
+        public int AccelerationPin, VelocityPin, SegmentIdPin, TPin;
+    }
+
     public class Simulation
     {
         private TimeSpan _simTimeElapsed;
@@ -13,13 +18,14 @@ namespace TSIM
         public SimulationCoordinateSpace CoordSpace { get; }
         public INetworkDatabase Network { get; }
         public IUnitDatabase Units { get; }
-        public IEnumerable<IAgent> Agents => _agents;
+        // public IEnumerable<IAgent> Agents => _agents;
 
         private readonly int?[] _currentSegmentByUnitId;
         private readonly SegmentEndpoint[] _dirByUnitId;
         private readonly float[] _tByUnitId;
+        private readonly UnitProperties[] _unitProperties;
 
-        private readonly List<IAgent> _agents = new List<IAgent>();
+        // private readonly List<IAgent> _agents = new List<IAgent>();
         private readonly LoggingManager _log;
 
         public Simulation(SimulationCoordinateSpace coordSpace, INetworkDatabase network, IUnitDatabase units, LoggingManager log)
@@ -32,6 +38,7 @@ namespace TSIM
             _currentSegmentByUnitId = new int?[units.GetNumUnits()];
             _dirByUnitId = new SegmentEndpoint[units.GetNumUnits()];
             _tByUnitId = new float[units.GetNumUnits()];
+            _unitProperties = new UnitProperties[units.GetNumUnits()];
 
             for (var unitIndex = 0; unitIndex < Units.GetNumUnits(); unitIndex++)
             {
@@ -49,12 +56,26 @@ namespace TSIM
                 _currentSegmentByUnitId[unitIndex] = segmentId;
                 _dirByUnitId[unitIndex] = dir;
                 _tByUnitId[unitIndex] = t;
+
+                var eh = _log.GetEntityHandle(_unitProperties[unitIndex].GetType(), unitIndex);
+                _unitProperties[unitIndex] = new UnitProperties{
+                    Controller = new TrainControlStack(unitIndex, _log, Network),
+                    AccelerationPin = _log.GetSignalPin(eh, "acceleration"),
+                    VelocityPin = _log.GetSignalPin(eh, "velocity"),
+                    SegmentIdPin = _log.GetSignalPin(eh, "segmentId"),
+                    TPin = _log.GetSignalPin(eh, "t"),
+                };
+
+                _unitProperties[unitIndex].Controller.GoAutoSchedule();
             }
         }
 
-        public void AddAgent(IAgent agent)
-        {
-            _agents.Add(agent);
+        public IDictionary<Unit, TrainControlStack> GetControllerMap() {
+            var map = new Dictionary<Unit, TrainControlStack>();
+            for (var unitIndex = 0; unitIndex < Units.GetNumUnits(); unitIndex++) {
+                map.Add(Units.GetUnitByIndex(unitIndex), _unitProperties[unitIndex].Controller);
+            }
+            return map;
         }
 
         public (int segmentId, float t, SegmentEndpoint dir) GetUnitTrackState(int unitIndex) =>
@@ -63,18 +84,10 @@ namespace TSIM
         public void Step(double dt)
         {
             _log.SetSimulatedTime(_simTimeElapsed.TotalSeconds);
+            var simTime = new DateTime(2000, 01, 01) + _simTimeElapsed;
 
             // TODO: do not use Unit.Velocity as authoritative; because we're doing on-rails simulation only
             // (at least for now), it would be more efficient to track scalar speed
-
-            var accelerationByUnitIndex = new float[Units.GetNumUnits()];
-
-            foreach (var agent in _agents)
-            {
-                var (unitIndex, acceleration) = agent.Step(this, dt);
-
-                accelerationByUnitIndex[unitIndex] = acceleration;
-            }
 
             for (var unitIndex = 0; unitIndex < Units.GetNumUnits(); unitIndex++)
             {
@@ -89,20 +102,39 @@ namespace TSIM
                 var unit = Units.GetUnitByIndex(unitIndex);
                 var speed = unit.Velocity.Length();
 
-                var acceleration = accelerationByUnitIndex[unitIndex];
-
-                // It is not allowed to accelerate backwards (since we are already lumping acceleration + braking into one variable)
-                double newSpeed = Math.Max(0, speed + acceleration * dt);
-
-                // Update unit position based on velocity
-                // If unit is on rail, it should stay snapped
-                var distanceToTravel = (speed + newSpeed) * 0.5f * dt;
-
                 // Find out in which segment we are and how far along
                 var segId = _currentSegmentByUnitId[unitIndex].Value;
                 var seg = Network.GetSegmentById(segId);
                 var t = _tByUnitId[unitIndex];
                 var dir = _dirByUnitId[unitIndex];
+
+                // Run train control stack
+                var trainStatus = new TrainStatus{ SegmentId = segId, T = t, Dir = dir, Velocity = unit.Velocity };
+                float acceleration = _unitProperties[unitIndex].Controller.Update(dt, simTime, trainStatus);
+
+                // Console.WriteLine($"(acc = {acceleration})");
+
+                _log.Feed(_unitProperties[unitIndex].AccelerationPin, acceleration);
+                _log.Feed(_unitProperties[unitIndex].VelocityPin, speed);
+                _log.Feed(_unitProperties[unitIndex].SegmentIdPin, segId);
+                _log.Feed(_unitProperties[unitIndex].TPin, t);
+
+                // It is not allowed to accelerate backwards (since we are already lumping acceleration + braking into one variable)
+                double newSpeed = Math.Max(0, speed + acceleration * dt);
+                double effDt;
+
+                if (speed + acceleration * dt >= 0) {
+                    effDt = dt;
+                }
+                else {
+                    effDt = -speed / acceleration;
+                    // Console.WriteLine($"effDt = {effDt}");
+                    System.Diagnostics.Debug.Assert(effDt >= 0);
+                }
+
+                // Update unit position based on velocity
+                // If unit is on rail, it should stay snapped
+                var distanceToTravel = speed * effDt + 0.5 * acceleration * effDt * effDt;
 
                 while (distanceToTravel > Single.Epsilon)
                 {
@@ -148,6 +180,24 @@ namespace TSIM
                             // For now just turn around
                             dir = dir.Other();
                             continue;
+                        }
+
+                        // Track split? First try to ask the controller how to proceed.
+                        if (candidates.Length > 1 && _unitProperties[unitIndex].Controller != null) {
+                            (int segmentId, SegmentEndpoint entryEp)? preferredContinuation = _unitProperties[unitIndex].Controller.GetPreferredContinuationSegment(segId, dir);
+
+                            if (preferredContinuation.HasValue) {
+                                foreach (var link in candidates) {
+                                    var candidateSegmentId = link.Segment1 != segId ? link.Segment1 : link.Segment2;
+                                    var candidateEp = link.Segment1 != segId ? link.Ep1 : link.Ep2;
+
+                                    if (candidateSegmentId == preferredContinuation.Value.segmentId && candidateEp == preferredContinuation.Value.entryEp) {
+                                        // perfect, it's the one!
+                                        candidates = new[] {link};
+                                        break;
+                                    }
+                                }
+                            }
                         }
 
                         if (candidates.Length > 1)

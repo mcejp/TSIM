@@ -36,6 +36,14 @@ namespace TSIM
             return pinId;
         }
 
+        // Message signal pins don't have their string emissions de-duplicated
+        public int GetMessageSignalPin(object eh, string pinName)
+        {
+            var pinId = _nextPin++;
+            _log.DefineMessageLogTarget(pinId, (string) eh + "/" + pinName);
+            return pinId;
+        }
+
         public void Feed(in int logTarget, float value)
         {
             _log.Feed(logTarget, value);
@@ -100,6 +108,12 @@ namespace TSIM
         public void DefineLogTarget(int logTarget, string name)
         {
             _sb.Append("DEF").Append(Delimiter).Append(logTarget).Append(Delimiter).Append(name).AppendLine();
+//            _targetNames.Add(logTarget, name);
+        }
+
+        public void DefineMessageLogTarget(int logTarget, string name)
+        {
+            _sb.Append("DEFM").Append(Delimiter).Append(logTarget).Append(Delimiter).Append(name).AppendLine();
 //            _targetNames.Add(logTarget, name);
         }
 

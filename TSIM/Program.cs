@@ -47,7 +47,6 @@ namespace TSIM
                         sw.Restart();
 
                         var sim = new Simulation(db.GetCoordinateSpace(), db, db, log);
-                        sim.Units.SetUnitSpeed(0, 50 / 3.6f);
 
                         var steps = 50;
                         var dt = 1.0f;

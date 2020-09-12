@@ -103,6 +103,20 @@ namespace TSIM.Model
             return (float) Math.Sqrt(dx * dx + dy * dy);
         }
 
+        public static float DistanceToEndpoint(this Segment segment, float t, SegmentEndpoint toEp) {
+            return toEp switch {
+                SegmentEndpoint.Start => segment.GetLength() * t,
+                SegmentEndpoint.End => segment.GetLength() * (1 - t),
+            };
+        }
+
+        public static float DistanceToEndpoint(float segmentLength, float t, SegmentEndpoint toEp) {
+            return toEp switch {
+                SegmentEndpoint.Start => segmentLength * t,
+                SegmentEndpoint.End => segmentLength * (1 - t),
+            };
+        }
+
         public static SegmentEndpoint Other(this SegmentEndpoint ep)
         {
             return ep switch {

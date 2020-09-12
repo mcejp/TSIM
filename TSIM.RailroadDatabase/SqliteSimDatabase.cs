@@ -144,16 +144,6 @@ namespace TSIM.RailroadDatabase
             return db_.SimulationCoordinateSpaces.First().ToModel();
         }
 
-        public void SetUnitSpeed(int id, float speed)
-        {
-            EnsureUnitsLoaded();
-
-            // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-            var u = _units[id];
-            u.Velocity = Utility.QuaternionToDirectionVector(u.Orientation) * speed;
-            _units[id] = u;
-        }
-
         public Segment GetSegmentById(int id)
         {
             if (_segmentCache.TryGetValue(id, out var seg))
@@ -162,6 +152,10 @@ namespace TSIM.RailroadDatabase
             }
 
             return _segmentCache[id] = db_.Segments.First(s => s.Id == id).ToModel();
+        }
+
+        public Station GetStationById(int id) {
+            return db_.Stations.First(s => s.Id == id).ToModel();
         }
 
         public SegmentLink[] FindConnectingSegments(int segmentId, SegmentEndpoint ep)
@@ -286,10 +280,7 @@ namespace TSIM.RailroadDatabase
             }
 
             // Reached end of segment. Look forward
-            var distanceAtEnd = dir switch {
-                SegmentEndpoint.End => distance + seg.GetLength() * (1 - t),
-                SegmentEndpoint.Start => distance + seg.GetLength() * t
-                };
+            var distanceAtEnd = distance + seg.DistanceToEndpoint(t, dir);
 
             if (currentBest.HasValue && currentBest.Value < distanceAtEnd)
             {

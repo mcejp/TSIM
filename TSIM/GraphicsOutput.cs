@@ -43,7 +43,7 @@ namespace TSIM
         private static void RenderToContext(SimulationCoordinateSpace coordinateSpace,
             INetworkDatabase ndb,
             IUnitDatabase units,
-            IEnumerable<IAgent> agents,
+            IDictionary<Unit, TrainControlStack>? controllerMap,
             Context cr,
             PointD center,
             double scale, int fontSize)
@@ -120,20 +120,24 @@ namespace TSIM
                 cr.Stroke();
 
                 cr.SetSourceColor(chameleon3);
-                DrawTextBold(cr, $"{unit.Class.Name}\n{unit.Velocity.Length() * 3.6:F1} km/h", posCS, fontSize);
+                var info = $"{unit.Class.Name}\n{unit.Velocity.Length() * 3.6:F1} km/h";
+                if (controllerMap != null && controllerMap.ContainsKey(unit)) {
+                    info += "\n" + controllerMap[unit].GetStateString();
+                }
+                DrawTextBold(cr, info, posCS, fontSize);
             }
 
             // Draw info about agents
-            if (agents != null)
-            {
-                int i = 0;
+            // if (agents != null)
+            // {
+            //     int i = 0;
 
-                foreach (var agent in agents)
-                {
-                    DrawTextRegular(cr, agent.ToString(), new PointD(0, i * 10), 9);
-                    i++;
-                }
-            }
+            //     foreach (var agent in agents)
+            //     {
+            //         DrawTextRegular(cr, agent.ToString(), new PointD(0, i * 10), 9);
+            //         i++;
+            //     }
+            // }
 
             cr.LineWidth = 1;
             cr.SetSourceColor(scarledRed1);
@@ -229,7 +233,7 @@ namespace TSIM
         public static void RenderPng(SimulationCoordinateSpace coordinateSpace,
             INetworkDatabase ndb,
             IUnitDatabase units,
-            IEnumerable<IAgent>? agents,
+            IDictionary<Unit, TrainControlStack>? controllerMap,
             string filename,
             int w, int h,
             double scale, int fontSize)
@@ -239,7 +243,7 @@ namespace TSIM
             var surf = new ImageSurface(Format.Argb32, w, h);
             Context cr = new Context(surf);
 
-            RenderToContext(coordinateSpace, ndb, units, agents, cr, center, scale, fontSize);
+            RenderToContext(coordinateSpace, ndb, units, controllerMap, cr, center, scale, fontSize);
 
             cr.Dispose();
             surf.WriteToPng(filename);

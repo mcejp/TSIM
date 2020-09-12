@@ -10,8 +10,11 @@ namespace TSIM.RailroadDatabase
         IEnumerable<SegmentLink> EnumerateSegmentLinks();
         IEnumerable<Station> EnumerateStations();
         Segment GetSegmentById(int id);
+        Station GetStationById(int id);
 
+        // Find segments connecting to end-point "ep" of segmentId
         SegmentLink[] FindConnectingSegments(int segmentId, SegmentEndpoint ep);
+
         (Station station, StationStop stop, float distance, TrajectorySegment[] plan)? FindNearestStationAlongTrack(int segmentId, float t,
             SegmentEndpoint dir, bool verbose);
         (int segmentId, SegmentEndpoint dir, float t)? FindSegmentAt(Vector3 position, Quaternion orientation,

@@ -45,10 +45,7 @@ namespace TSIM.WebServer
             for (int unitIndex = 0; unitIndex < db.GetNumUnits(); unitIndex++)
             {
                 // FIXME: StationToStationAgent will be extremely slow if there are no easily reachable stations
-                sim.AddAgent(new StationToStationAgent(db, db, log, unitIndex));
-
-                // Backup:
-//                sim.Units.SetUnitSpeed(0, 50 / 3.6f);
+                //sim.AddAgent(new StationToStationAgent(db, db, log, unitIndex));
             }
 
             uglyGlobalSimulation = sim;

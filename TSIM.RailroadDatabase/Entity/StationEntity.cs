@@ -33,7 +33,7 @@ namespace TSIM.RailroadDatabase.Entity
 
         public Station ToModel()
         {
-            return new Station(Name, from stop in Stops select stop.ToModel());
+            return new Station(Id, Name, from stop in Stops select stop.ToModel());
         }
     }
 

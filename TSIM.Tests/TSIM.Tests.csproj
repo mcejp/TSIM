@@ -19,6 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\TSIM\TSIM.csproj" />
       <ProjectReference Include="..\TSIM.Model\TSIM.Model.csproj" />
     </ItemGroup>
 
