@@ -43,16 +43,17 @@ public class TractionController {
     private State _state = State.STOPPED;
     private TractionControllerCommand? _lastCommand;
     private readonly LoggingManager _log;
-    private readonly int _infoPin, _statePin, _trackAheadPin, _vMaxPin, _currentIndexPin, _errorPin;
+    private readonly int _infoPin, _statePin, _trackAheadPin, _vMaxPin, _controlModePin, _currentIndexPin, _errorPin;
 
     public TractionController(int unitId, LoggingManager log)
     {
         _log = log;
         var eh = _log.GetEntityHandle(this.GetType(), unitId);
-        _infoPin = _log.GetSignalPin(eh, "info");
+        _infoPin = _log.GetMessageSignalPin(eh, "info");
         _statePin = _log.GetSignalPin(eh, "state");
         _trackAheadPin = _log.GetSignalPin(eh, "trackAhead");
         _vMaxPin = _log.GetSignalPin(eh, "v_max");
+        _controlModePin = _log.GetSignalPin(eh, "controlMode");
         _currentIndexPin = _log.GetSignalPin(eh, "currentIndex");
         _errorPin = _log.GetMessageSignalPin(eh, "error");
     }
@@ -113,6 +114,8 @@ public class TractionController {
 
             int currentIndex = -1;
 
+            // FIXME: This is not so easy!! What if our plan includes passing the same segment multiple times,
+            //        or for example turning around?
             for (int i = 0; i < cmd.segmentsToFollow.Length; i++) {
                 if (segmentId == cmd.segmentsToFollow[i].segmentId) {
                     currentIndex = i;
@@ -174,19 +177,24 @@ public class TractionController {
 
                 _log.Feed(_trackAheadPin, totalDist);
                 if (totalDist < 0) {
-                    _log.Feed(_errorPin, $"totalDist < 0: {totalDist}; ({segmentId}:{t} -> {dir} / -> {cmd.segmentsToFollow[currentIndex].goalT}); {currentIndex}/{cmd.segmentsToFollow.Length}");
-                    totalDist = 0;  // mask it to prevent further mess
+                    _log.Feed(_errorPin, $"totalDist < 0: {totalDist,8:F4}; ({segmentId}:{t} -> {dir} / -> {cmd.segmentsToFollow[currentIndex].goalT}); {currentIndex}/{cmd.segmentsToFollow.Length}");
+                    Console.WriteLine($"totalDist < 0: {totalDist,8:F4}; ({segmentId}:{t} -> {dir} / -> {cmd.segmentsToFollow[currentIndex].goalT}); {currentIndex}/{cmd.segmentsToFollow.Length}");
+                    //totalDist = 0;  // mask it to prevent further mess
                 }
-                // System.Diagnostics.Debug.Assert(totalDist >= 0);
+                System.Diagnostics.Debug.Assert(totalDist >= 0);
 
                 float remainingDistanceToStartFullyBraking = 0.1f * (float)dt;
 
                 if (totalDist > remainingDistanceToStartFullyBraking) {
                     // Control loop towards objective
                     float v_max;
-                    (acceleration, v_max) = TrainModel.AccelerationToFullyStopAfter2(velocity, totalDist, maxAccel, maxDecel, maxVelocity, (float)dt);
+                    TrainModel.CalculationMode mode;
+                    (acceleration, v_max, mode) = TrainModel.AccelerationToFullyStopAfter2(velocity, totalDist, maxAccel, maxDecel, maxVelocity, (float)dt);
+                    // Console.WriteLine($"({acceleration}, {v_max}) = AccelerationToFullyStopAfter2({velocity}, {totalDist}, {maxAccel}, {maxDecel}, {maxVelocity}, {(float)dt})");
+
                     _state = State.EN_ROUTE;
                     _log.Feed(_vMaxPin, v_max);
+                    _log.Feed(_controlModePin, mode.ToString());
                 }
                 else if (velocity > 0.01f) {
                     acceleration = TrainModel.AccelerationToFullyStopNow(dt, velocity, maxDecel);

@@ -117,7 +117,7 @@ namespace TSIM.RailroadDatabase
         }
 
         public (Station station, StationStop stop, float distance, TrajectorySegment[] plan)? FindNearestStationAlongTrack(int segmentId, float t,
-            SegmentEndpoint dir, bool verbose)
+            SegmentEndpoint dir, int? excludedStationId, bool verbose)
         {
             throw new NotImplementedException();
         }

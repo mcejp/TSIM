@@ -34,6 +34,7 @@ public class WaypointController {
     }
 
     int? _currentPlanForStationId = null;
+    int? _lastStationGoneTo = null;
     TractionControllerCommand? _currentPlanCommand = null;
     State _state = State.STOPPED;
 
@@ -76,7 +77,7 @@ public class WaypointController {
                     break;
 
                 case Mode.GOTO_NEAREST_STATION:
-                    GoToNearestStation(trainStatus);
+                    GoToNearestStation(trainStatus, _lastStationGoneTo);
                     break;
             }
         }
@@ -113,10 +114,10 @@ public class WaypointController {
         }
     }
 
-    private void GoToNearestStation(TrainStatus trainStatus) {
+    private void GoToNearestStation(TrainStatus trainStatus, int? excludedStationId) {
         var (segmentId, t, dir) = (trainStatus.SegmentId, trainStatus.T, trainStatus.Dir);
 
-        var nearest = _network.FindNearestStationAlongTrack(segmentId, t, dir, false);
+        var nearest = _network.FindNearestStationAlongTrack(segmentId, t, dir, excludedStationId, false);
 
         if (nearest != null)
         {
@@ -144,6 +145,9 @@ public class WaypointController {
         var station = _network.GetStationById(stationId);
         _log.Feed(_infoPin, $"Planning route to station {station.Name}");
 
+        // TODO: wrong! correct to only set this after arrival confirmation!
+        _lastStationGoneTo = stationId;
+
         foreach (var stop in station.Stops) {
             int destinationSegmentId = stop.SegmentId;
             float destinationT = stop.T;
@@ -165,7 +169,7 @@ public class WaypointController {
 
                 _state = State.EN_ROUTE;
 
-                _log.Feed(_infoPin, $"OK route to station {station.Name}, distance XXX km");
+                _log.Feed(_infoPin, $"OK route to station {station.Name}, distance {result.totalCost} m");
             }
             else {
                 _state = State.NO_PATH;

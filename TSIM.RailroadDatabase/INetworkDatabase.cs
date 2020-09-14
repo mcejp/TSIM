@@ -16,7 +16,7 @@ namespace TSIM.RailroadDatabase
         SegmentLink[] FindConnectingSegments(int segmentId, SegmentEndpoint ep);
 
         (Station station, StationStop stop, float distance, TrajectorySegment[] plan)? FindNearestStationAlongTrack(int segmentId, float t,
-            SegmentEndpoint dir, bool verbose);
+            SegmentEndpoint dir, int? excludedStationId, bool verbose);
         (int segmentId, SegmentEndpoint dir, float t)? FindSegmentAt(Vector3 position, Quaternion orientation,
             float radius, float maxAngle);
 

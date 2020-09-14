@@ -79,7 +79,7 @@ namespace TSIM.WebServer
 
                         // Follow track to nearest station
                         // This is going to be super slow, cache results!
-                        var nearest = _network.FindNearestStationAlongTrack(segmentId, t, dir, false);
+                        var nearest = _network.FindNearestStationAlongTrack(segmentId, t, dir, null, false);
 
                         if (nearest != null)
                         {
@@ -119,7 +119,7 @@ namespace TSIM.WebServer
 
                                 // check if we really are where we should be
                                 // TODO: replace this shitcode with something that makes sense
-                                var nearest = _network.FindNearestStationAlongTrack(segmentId, t, dir, false);
+                                var nearest = _network.FindNearestStationAlongTrack(segmentId, t, dir, null, false);
                                 if (nearest != null)
                                 {
                                     var (station, stop, distance, plan) = nearest.Value;

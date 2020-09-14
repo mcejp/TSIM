@@ -170,7 +170,7 @@ namespace TSIM.RailroadDatabase
         }
 
         public (Station station, StationStop stop, float distance, TrajectorySegment[] plan)? FindNearestStationAlongTrack(
-            int segmentId, float t, SegmentEndpoint dir, bool verbose)
+            int segmentId, float t, SegmentEndpoint dir, int? excludedStationId, bool verbose)
         {
             // Queue of tuples (segmentId, t(entry), dir) for breath-first search
             var backlog = new Queue<(int, float, SegmentEndpoint, float, TrajectorySegment)>();
@@ -185,7 +185,7 @@ namespace TSIM.RailroadDatabase
                 TrajectorySegment predecessor;
                 (segmentId, t, dir, distance, predecessor) = backlog.Dequeue();
 
-                var found = SearchNearestStationAlongTrack(segmentId, t, dir, distance, best?.distance, backlog, predecessor, verbose);
+                var found = SearchNearestStationAlongTrack(segmentId, t, dir, distance, best?.distance, backlog, predecessor, excludedStationId, verbose);
 
                 if (found != null)
                 {
@@ -226,12 +226,16 @@ namespace TSIM.RailroadDatabase
 
         private (Station station, StationStop stop, float distance, TrajectorySegment plan)? SearchNearestStationAlongTrack(int segmentId, float t,
             SegmentEndpoint dir, float distance, float? currentBest, Queue<(int, float, SegmentEndpoint, float, TrajectorySegment)> backlog,
-            TrajectorySegment predecessor, bool verbose)
+            TrajectorySegment predecessor, int? excludedStationId, bool verbose)
         {
             var seg = GetSegmentById(segmentId);
 
             // Look for stops in this segment
-            var stops = db_.StationStops.Where(s => s.SegmentId == segmentId).Include(s => s.Station);
+            var q = db_.StationStops.Where(s => s.SegmentId == segmentId);
+            if (excludedStationId.HasValue) {
+                q = q.Where(s => s.Station.Id != excludedStationId.Value);
+            }
+            var stops = q.Include(s => s.Station);
 
             (Station station, StationStop stop, float distance, TrajectorySegment plan)? best = null;
 
