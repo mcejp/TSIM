@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Text.Json.Serialization;
 
 namespace TSIM.Model
 {
@@ -9,9 +10,10 @@ namespace TSIM.Model
         public Vector3 Velocity;
         public Quaternion Orientation;
 
-        public Unit(UnitClass class_, Vector3 pos, Vector3 velocity, Quaternion orientation)
+        [JsonConstructor]   // without this, JsonDeserialize fails to initialize @Class
+        public Unit(UnitClass @class, Vector3 pos, Vector3 velocity, Quaternion orientation)
         {
-            Class = class_;
+            Class = @class;
             Pos = pos;
             Velocity = velocity;
             Orientation = orientation;

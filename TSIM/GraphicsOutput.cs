@@ -74,7 +74,7 @@ namespace TSIM
                 var start = SimToCanvasSpace(seg.ControlPoints[0], center, scale);
                 var end = SimToCanvasSpace(seg.ControlPoints[1], center, scale);
 
-                cr.LineWidth = 1;
+                cr.LineWidth = 1.5;
                 cr.SetSourceColor(aluminium6);
                 cr.MoveTo(start);
                 cr.LineTo(end);

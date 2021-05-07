@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using TSIM.Model;
 
@@ -395,6 +396,20 @@ namespace TSIM.RailroadDatabase
 
             db_.QuadTreeNodes.Add(new Entity.QuadTreeNodeEntity(quadTree.Root));
             db_.SaveChanges();
+        }
+
+        public byte[] SnapshotFullMake()
+        {
+            EnsureUnitsLoaded();
+
+            var options = new JsonSerializerOptions { IncludeFields = true };
+            return JsonSerializer.SerializeToUtf8Bytes(_units, options);
+        }
+
+        public void SnapshotFullRestore(byte[] snapshot)
+        {
+            var options = new JsonSerializerOptions { IncludeFields = true };
+            _units = JsonSerializer.Deserialize<Unit[]>(snapshot, options);
         }
 
         private void EnsureQuadTreeLoaded()

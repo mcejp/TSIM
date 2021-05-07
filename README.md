@@ -5,6 +5,7 @@ Transport simulation playground
 
 ## How to run (real-time mode)
 
+0. RabbitMQ must be running: `docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management`
 1. Open project in Rider
 2. Build and execute target "TSIM". This initializes the simulation database from "data/scenario.json" and writes the
    database to "simdb.sqlite" (for the moment hardcoded)
@@ -19,6 +20,8 @@ Transport simulation playground
             --importscenario maps/cern1.json \
             --simulate \
             --rendersvg work/output.svg
+    dotnet run --project TSIM.SimServer/TSIM.SimServer.csproj
+    # + in another shell:
     dotnet run --project TSIM.WebServer/TSIM.WebServer.csproj
 
     # alternatively, to be reachable from the internet
@@ -44,5 +47,4 @@ Then import OSM into QGIS... and do what?
 
 ## Installing .NET Core
 
-- CentOS 8: `sudo dnf install dotnet-sdk-3.1` per [this link](https://docs.microsoft.com/en-us/dotnet/core/install/linux-centos)
-- Other: [see here](https://dotnet.microsoft.com/download/dotnet-core/3.1)
+See: https://dotnet.microsoft.com/download/dotnet/5.0

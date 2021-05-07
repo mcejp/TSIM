@@ -1,28 +1,22 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using TSIM.RailroadDatabase;
 
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
+
 namespace TSIM.WebServer
 {
     public class Program
     {
         public static Simulation uglyGlobalSimulation;        // Global because HomeController uses it
-
-        private readonly LoggingManager _log;
-        private readonly int _perfPin;
-
-        public Program(LoggingManager log)
-        {
-            _log = log;
-
-            var eh = log.GetEntityHandle(typeof(Program), -1);
-            _perfPin = log.GetSignalPin(eh, "timeUtilization");
-        }
+                                                              // TODO: Obliterate this!
 
         public static void Main(string[] args)
         {
@@ -30,10 +24,7 @@ namespace TSIM.WebServer
             string workDir = File.Exists("work/simdb.sqlite") ? "work" : "../work";
 
             // 0. init internals
-            using var log = new LoggingManager(Path.Join(workDir, "simlog.csv"));
-            var cp = new LoggingManager.ClassPolicy(acceptByDefault: false, acceptId: new int[] {0});
-//            cp.SetThrottleRate(1);
-            log.SetClassPolicy(typeof(StationToStationAgent), cp);
+            using var log = new LoggingManager(Path.Join(workDir, "simlog_dummy.csv"));
 
             // 1. open pre-initialized DB
             var db = SqliteSimDatabase.Open(Path.Join(workDir, "simdb.sqlite"));
@@ -50,55 +41,40 @@ namespace TSIM.WebServer
 
             uglyGlobalSimulation = sim;
 
-            var p = new Program(log);
-            Task.Run(() => p.Simulate(sim));
+            Subscribe(sim);
 
             // now start web server
             CreateHostBuilder(args).Build().Run();
         }
 
-        // TODO: maybe factor this out into a "RealtimeSimulationContext" or something
-        private void Simulate(Simulation sim)
+        private static void Subscribe(Simulation sim)
         {
-            const int simStepMs = 200;
+            var factory = new ConnectionFactory() { HostName = "localhost" };
+            var connection = factory.CreateConnection();
 
-            var sw = new Stopwatch();
+            var channel = connection.CreateModel();
+            channel.QueueDeclare(queue: "hello",
+                                 durable: false,
+                                 exclusive: false,
+                                 autoDelete: false,
+                                 arguments: null);
 
-            var lastReport = DateTime.Now;
-            var simTimeSinceLastReportMs = 0;
-            long realTimeSinceLastReportMs = 0;
-
-            for (;;)
+            var consumer = new EventingBasicConsumer(channel);
+            consumer.Received += (model, ea) =>
             {
+                var body = ea.Body.ToArray();
+                var message = Encoding.UTF8.GetString(body);
+                // Console.WriteLine("RX " + message);
+
                 lock (sim)
                 {
-                    sw.Restart();
-                    sim.Step(simStepMs * 0.001);
-                    sw.Stop();
+                    sim.Units.SnapshotFullRestore(body);
                 }
+            };
 
-                var realTimeMs = sw.ElapsedMilliseconds;
-
-                simTimeSinceLastReportMs += simStepMs;
-                realTimeSinceLastReportMs += realTimeMs;
-
-                if (DateTime.Now > lastReport + TimeSpan.FromSeconds(1))
-                {
-//                    Console.WriteLine($"Took {realTimeSinceLastReportMs * 0.001:F2} s to simulate {simTimeSinceLastReportMs * 0.001:F2} s");
-                    _log.Feed(_perfPin, (float) realTimeSinceLastReportMs / simTimeSinceLastReportMs);
-
-                    lastReport = DateTime.Now;
-                    simTimeSinceLastReportMs = 0;
-                    realTimeSinceLastReportMs = 0;
-                }
-
-                var sleepTimeMs = simStepMs - realTimeMs;
-
-                if (sleepTimeMs > 0)
-                {
-                    Thread.Sleep((int) sleepTimeMs);
-                }
-            }
+            channel.BasicConsume(queue: "UnitDatabase_full.bin",
+                                  autoAck: true,
+                                  consumer: consumer);
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>

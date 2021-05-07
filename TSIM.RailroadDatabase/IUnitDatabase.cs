@@ -11,5 +11,8 @@ namespace TSIM.RailroadDatabase
         int GetNumUnits();
         ref Unit GetUnitByIndex(int unitIndex);
         void UpdateUnitByIndex(int unitIndex, Unit unit);
+
+        byte[] SnapshotFullMake();
+        void SnapshotFullRestore(byte[] snapshot);
     }
 }

@@ -3,7 +3,7 @@ using System.Linq;
 using TSIM.Model;
 using TSIM.RailroadDatabase;
 
-namespace TSIM.WebServer
+namespace TSIM.SimServer
 {
     public class StationToStationAgent : IAgent
     {
