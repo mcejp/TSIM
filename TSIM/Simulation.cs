@@ -23,6 +23,7 @@ namespace TSIM
         private readonly int?[] _currentSegmentByUnitId;
         private readonly SegmentEndpoint[] _dirByUnitId;
         private readonly float[] _tByUnitId;
+        // TODO: All state should be moved out of Simulation into an explicit state container
         private readonly UnitProperties[] _unitProperties;
 
         // private readonly List<IAgent> _agents = new List<IAgent>();
@@ -70,12 +71,12 @@ namespace TSIM
             }
         }
 
-        public IDictionary<Unit, TrainControlStack> GetControllerMap() {
-            var map = new Dictionary<Unit, TrainControlStack>();
+        public IDictionary<int, TrainControlStateSummary> GetControllerStateSummary() {
+            var summaryMap = new Dictionary<int, TrainControlStateSummary>();
             for (var unitIndex = 0; unitIndex < Units.GetNumUnits(); unitIndex++) {
-                map.Add(Units.GetUnitByIndex(unitIndex), _unitProperties[unitIndex].Controller);
+                summaryMap.Add(unitIndex, _unitProperties[unitIndex].Controller.GetStateSummary());
             }
-            return map;
+            return summaryMap;
         }
 
         public (int segmentId, float t, SegmentEndpoint dir) GetUnitTrackState(int unitIndex) =>

@@ -43,7 +43,7 @@ namespace TSIM
         private static void RenderToContext(SimulationCoordinateSpace coordinateSpace,
             INetworkDatabase ndb,
             IUnitDatabase units,
-            IDictionary<Unit, TrainControlStack>? controllerMap,
+            IDictionary<int, TrainControlStateSummary>? controllerMap,
             Context cr,
             PointD center,
             double scale, int fontSize)
@@ -105,6 +105,7 @@ namespace TSIM
             }
 
             // Draw trains
+            int unitIndex = 0;
             foreach (var unit in units.EnumerateUnits())
             {
                 var pos = unit.Pos;
@@ -121,10 +122,11 @@ namespace TSIM
 
                 cr.SetSourceColor(chameleon3);
                 var info = $"{unit.Class.Name}\n{unit.Velocity.Length() * 3.6:F1} km/h";
-                if (controllerMap != null && controllerMap.ContainsKey(unit)) {
-                    info += "\n" + controllerMap[unit].GetStateString();
+                if (controllerMap != null && controllerMap.ContainsKey(unitIndex)) {
+                    info += "\n" + controllerMap[unitIndex].SchedulerState;
                 }
                 DrawTextBold(cr, info, posCS, fontSize);
+                unitIndex++;
             }
 
             // Draw info about agents
@@ -233,7 +235,7 @@ namespace TSIM
         public static void RenderPng(SimulationCoordinateSpace coordinateSpace,
             INetworkDatabase ndb,
             IUnitDatabase units,
-            IDictionary<Unit, TrainControlStack>? controllerMap,
+            IDictionary<int, TrainControlStateSummary>? controllerMap,
             string filename,
             int w, int h,
             double scale, int fontSize)

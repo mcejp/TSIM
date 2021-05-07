@@ -1,8 +1,15 @@
 using System;
+using System.Text.Json.Serialization;
 using TSIM.Model;
 using TSIM.RailroadDatabase;
 
 namespace TSIM {
+
+// This class contains a distillation of all the state for presentation purposes (display)
+public class TrainControlStateSummary {
+    [JsonPropertyName("schedulerState")]
+    public string? SchedulerState { get; set; }
+}
 
 // Wrapper for all the different controllers needed for a train.
 // This way the specific control architecture can be opaque to the simulation engine.
@@ -30,7 +37,10 @@ public class TrainControlStack {
         return _tractionController.GetPreferredContinuationSegment(fromSegmentId, fromEp);
     }
 
-    public string GetStateString() => _scheduleController.GetState().ToString();
+    public TrainControlStateSummary GetStateSummary() =>
+            new TrainControlStateSummary { SchedulerState = this.GetStateString() };
+
+    private string GetStateString() => _scheduleController.GetState().ToString();
 
     public void GoAutoSchedule() {
         _scheduleControllerInput = ScheduleController.Mode.AUTO_SCHEDULE;

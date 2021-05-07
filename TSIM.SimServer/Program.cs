@@ -1,9 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using TSIM.RailroadDatabase;
 
 using RabbitMQ.Client;
@@ -49,6 +47,12 @@ namespace TSIM.SimServer
                                  exclusive: false,
                                  autoDelete: false,
                                  arguments: null);
+
+            channel.QueueDeclare(queue: "TrainControl_full.json",
+                                 durable: false,
+                                 exclusive: false,
+                                 autoDelete: false,
+                                 arguments: null);
             // End Init RabbitMQ
 
             var eh = log.GetEntityHandle(typeof(Program), -1);
@@ -83,15 +87,20 @@ namespace TSIM.SimServer
 
                 if (simStep % publishPeriodSteps == 0)
                 {
-                    // TODO: Publish UnitDatabase
-                    // string message = $"Step: {simStep}";
-                    // var body = Encoding.UTF8.GetBytes(message);
-                    var body = sim.Units.SnapshotFullMake();
+                    var unitsSnapshot = sim.Units.SnapshotFullMake();
 
                     channel.BasicPublish(exchange: "",
                                          routingKey: "UnitDatabase_full.json",
                                          basicProperties: null,
-                                         body: body);
+                                         body: unitsSnapshot);
+
+                    var controllerMap = sim.GetControllerStateSummary();
+                    var controlSnapshot = Serialization.SerializeTrainControlStateToJsonUtf8Bytes(controllerMap);
+
+                    channel.BasicPublish(exchange: "",
+                                         routingKey: "TrainControl_full.json",
+                                         basicProperties: null,
+                                         body: controlSnapshot);
                 }
 
                 var sleepTimeMs = simStepMs - realTimeMs;

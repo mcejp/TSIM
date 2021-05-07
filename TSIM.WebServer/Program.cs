@@ -1,15 +1,14 @@
-using System;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
-using TSIM.RailroadDatabase;
+using System.Collections.Generic;
 
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+
+using TSIM.RailroadDatabase;
+using System;
 
 namespace TSIM.WebServer
 {
@@ -17,6 +16,9 @@ namespace TSIM.WebServer
     {
         public static Simulation uglyGlobalSimulation;        // Global because HomeController uses it
                                                               // TODO: Obliterate this!
+
+        // No locking required, replaced atomically
+        public static IDictionary<int, TrainControlStateSummary> uglyGlobalTCSS;
 
         public static void Main(string[] args)
         {
@@ -53,7 +55,13 @@ namespace TSIM.WebServer
             var connection = factory.CreateConnection();
 
             var channel = connection.CreateModel();
-            channel.QueueDeclare(queue: "hello",
+            channel.QueueDeclare(queue: "UnitDatabase_full.json",
+                                 durable: false,
+                                 exclusive: false,
+                                 autoDelete: false,
+                                 arguments: null);
+
+            channel.QueueDeclare(queue: "TrainControl_full.json",
                                  durable: false,
                                  exclusive: false,
                                  autoDelete: false,
@@ -72,9 +80,25 @@ namespace TSIM.WebServer
                 }
             };
 
+            var consumer2 = new EventingBasicConsumer(channel);
+            consumer2.Received += (model, ea) =>
+            {
+                var body = ea.Body.ToArray();
+                var message = Encoding.UTF8.GetString(body);
+                // Console.WriteLine("RX " + message);
+
+                var controlStateMap = Serialization.DeserializeTrainControlState(body);
+
+                uglyGlobalTCSS = controlStateMap;
+            };
+
             channel.BasicConsume(queue: "UnitDatabase_full.json",
                                   autoAck: true,
                                   consumer: consumer);
+
+            channel.BasicConsume(queue: "TrainControl_full.json",
+                                  autoAck: true,
+                                  consumer: consumer2);
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
