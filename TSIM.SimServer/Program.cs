@@ -24,7 +24,7 @@ namespace TSIM.SimServer
             using var log = new LoggingManager(Path.Join(workDir, "simlog.csv"));
             var cp = new LoggingManager.ClassPolicy(acceptByDefault: false, acceptId: new int[] {0});
 //            cp.SetThrottleRate(1);
-            log.SetClassPolicy(typeof(StationToStationAgent), cp);
+            // log.SetClassPolicy(typeof(StationToStationAgent), cp);
 
             // 1. open pre-initialized DB
             var db = SqliteSimDatabase.Open(Path.Join(workDir, "simdb.sqlite"));
