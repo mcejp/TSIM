@@ -1,5 +1,6 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# 
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSIM", "TSIM\TSIM.csproj", "{1C176324-EF55-4D98-BA9A-D4298D9C89E2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSIM.Tests", "TSIM.Tests\TSIM.Tests.csproj", "{C7DDF57D-0EF7-4834-8DBC-8B15F280A5CE}"
@@ -9,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSIM.Model", "TSIM.Model\TSIM.Model.csproj", "{CF401096-52D3-454F-BA07-7AFFCA4A68F6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSIM.WebServer", "TSIM.WebServer\TSIM.WebServer.csproj", "{4E772D49-4CAD-4808-8288-E5A2E5B62F53}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSIM.SimServer", "TSIM.SimServer\TSIM.SimServer.csproj", "{645C4F00-B06C-43D6-B3B3-43F46346E39F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,5 +39,9 @@ Global
 		{4E772D49-4CAD-4808-8288-E5A2E5B62F53}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E772D49-4CAD-4808-8288-E5A2E5B62F53}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E772D49-4CAD-4808-8288-E5A2E5B62F53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{645C4F00-B06C-43D6-B3B3-43F46346E39F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{645C4F00-B06C-43D6-B3B3-43F46346E39F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{645C4F00-B06C-43D6-B3B3-43F46346E39F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{645C4F00-B06C-43D6-B3B3-43F46346E39F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
