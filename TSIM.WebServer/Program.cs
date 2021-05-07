@@ -72,7 +72,7 @@ namespace TSIM.WebServer
                 }
             };
 
-            channel.BasicConsume(queue: "UnitDatabase_full.bin",
+            channel.BasicConsume(queue: "UnitDatabase_full.json",
                                   autoAck: true,
                                   consumer: consumer);
         }

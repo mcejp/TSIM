@@ -44,7 +44,7 @@ namespace TSIM.SimServer
             var connection = factory.CreateConnection();
             var channel = connection.CreateModel();
 
-            channel.QueueDeclare(queue: "UnitDatabase_full.bin",
+            channel.QueueDeclare(queue: "UnitDatabase_full.json",
                                  durable: false,
                                  exclusive: false,
                                  autoDelete: false,
@@ -89,7 +89,7 @@ namespace TSIM.SimServer
                     var body = sim.Units.SnapshotFullMake();
 
                     channel.BasicPublish(exchange: "",
-                                         routingKey: "UnitDatabase_full.bin",
+                                         routingKey: "UnitDatabase_full.json",
                                          basicProperties: null,
                                          body: body);
                 }

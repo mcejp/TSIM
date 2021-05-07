@@ -10,4 +10,4 @@ The complete state is made up of:
 In Phase 1, Network Database is assumed immutable, so it only needs to be loaded once.
 
 The databases are published via RabbitMQ in these formats:
-- Unit Database Full Binary Snapshot (`UnitDatabase_full.bin`)
+- Unit Database Full JSON Snapshot (`UnitDatabase_full.json`)
