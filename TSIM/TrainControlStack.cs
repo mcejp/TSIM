@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text.Json.Serialization;
 using TSIM.Model;
 using TSIM.RailroadDatabase;
@@ -7,18 +8,34 @@ namespace TSIM {
 
 // This class contains a distillation of all the state for presentation purposes (display)
 public class TrainControlStateSummary {
+    public class SegmentToFollow {
+        [JsonPropertyName("segmentId")]
+        public int SegmentId { get; set; }
+        [JsonPropertyName("entryEp")]
+        public SegmentEndpoint EntryEp { get; set; }
+        [JsonPropertyName("segmentLength")]
+        public float SegmentLength { get; set; }
+        [JsonPropertyName("goalT")]
+        // TODO: should be, like, nullable or something
+        public float GoalT { get; set; }
+    };
+
     [JsonPropertyName("schedulerState")]
     public string? SchedulerState { get; set; }
+
+    [JsonPropertyName("segmentsToFollow")]
+    public SegmentToFollow[]? SegmentsToFollow { get; set; }
 }
 
 // Wrapper for all the different controllers needed for a train.
 // This way the specific control architecture can be opaque to the simulation engine.
 public class TrainControlStack {
     private ScheduleController.Mode _scheduleControllerInput = ScheduleController.Mode.STOP;
-
     private readonly ScheduleController _scheduleController;
     private readonly WaypointController _waypointController;
     private readonly TractionController _tractionController;
+
+    private TractionControllerCommand? _latestRtcCommand;
 
     // private readonly LoggingManager _log;
     // private readonly int _infoPin;
@@ -37,8 +54,15 @@ public class TrainControlStack {
         return _tractionController.GetPreferredContinuationSegment(fromSegmentId, fromEp);
     }
 
-    public TrainControlStateSummary GetStateSummary() =>
-            new TrainControlStateSummary { SchedulerState = this.GetStateString() };
+    public TrainControlStateSummary GetStateSummary() => new TrainControlStateSummary {
+        SchedulerState = this.GetStateString(),
+
+        // TODO: how can we avoid all of this ugly conversion?
+        // Perhaps the problem is that we insist on using annotation-based serialization to JSON, so we have to duplicate all structures
+        SegmentsToFollow = _latestRtcCommand?.segmentsToFollow?.Select(tuple => new TrainControlStateSummary.SegmentToFollow {
+                SegmentId = tuple.segmentId, EntryEp = tuple.entryEp, SegmentLength = tuple.segmentLength, GoalT = tuple.goalT,
+            }).ToArray(),
+        };
 
     private string GetStateString() => _scheduleController.GetState().ToString();
 
@@ -52,6 +76,7 @@ public class TrainControlStack {
 
         var tcState = _tractionController.GetState();
         var rtcCommand = _waypointController.Update(simTime, maybeWpcCommand, trainStatus, tcState);
+        _latestRtcCommand = rtcCommand;
 
         float maxVelocity = 80.0f / 3.6f;
         float maxAccel = 1.0f;

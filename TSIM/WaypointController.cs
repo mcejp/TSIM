@@ -145,7 +145,7 @@ public class WaypointController {
         var station = _network.GetStationById(stationId);
         _log.Feed(_infoPin, $"Planning route to station {station.Name}");
 
-        // TODO: wrong! correct to only set this after arrival confirmation!
+        // FIXME: wrong! correct to set this _only_ after arrival confirmation!
         _lastStationGoneTo = stationId;
 
         foreach (var stop in station.Stops) {

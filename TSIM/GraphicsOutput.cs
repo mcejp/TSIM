@@ -21,6 +21,8 @@ namespace TSIM
         private static readonly Color skyBlue2 = FromHex("#3465a4");
         private static readonly Color skyBlue3 = FromHex("#204a87");
 
+        private static readonly double railLineWidth = 1.5;
+
         // https://stackoverflow.com/a/24213444
         private static Color FromHex(string hex)
         {
@@ -74,7 +76,7 @@ namespace TSIM
                 var start = SimToCanvasSpace(seg.ControlPoints[0], center, scale);
                 var end = SimToCanvasSpace(seg.ControlPoints[1], center, scale);
 
-                cr.LineWidth = 1.5;
+                cr.LineWidth = railLineWidth;
                 cr.SetSourceColor(aluminium6);
                 cr.MoveTo(start);
                 cr.LineTo(end);
@@ -114,18 +116,46 @@ namespace TSIM
                 var posCS = SimToCanvasSpace(pos, center, scale);
                 var headCS = SimToCanvasSpace(head, center, scale);
 
-                cr.LineWidth = 2;
+                var info = $"{unit.Class.Name}\n{unit.Velocity.Length() * 3.6:F1} km/h";
+                if (controllerMap != null && controllerMap.ContainsKey(unitIndex)) {
+                    info += "\n" + controllerMap[unitIndex].SchedulerState;
+
+                    var route = controllerMap[unitIndex].SegmentsToFollow;
+
+                    if (route != null) {
+                        foreach (var entry in route) {
+                            // try {
+                            // Console.WriteLine($"Segment => {entry.SegmentId}");
+                            var seg = ndb.GetSegmentById(entry.SegmentId);
+                            Trace.Assert(seg.ControlPoints.Length == 2);
+
+                            var startXyz = seg.GetEndpoint(entry.EntryEp);
+                            var endXyz = entry.GoalT >= 0 ? seg.GetPoint(entry.GoalT) : seg.GetEndpoint(entry.EntryEp.Other());
+
+                            var start = SimToCanvasSpace(startXyz, center, scale);
+                            var end = SimToCanvasSpace(endXyz, center, scale);
+
+                            cr.LineWidth = railLineWidth * 2;
+                            cr.SetSourceColor(plum1);
+                            cr.MoveTo(start);
+                            cr.LineTo(end);
+                            cr.Stroke();
+                            // }
+                            // catch (System.InvalidOperationException ex) {
+                            // }
+                        }
+                    }
+                }
+
+                cr.LineWidth = railLineWidth * 2;
                 cr.SetSourceColor(chameleon1);
                 cr.MoveTo(posCS.X * 2 - headCS.X, posCS.Y * 2 - headCS.Y);
                 cr.LineTo(headCS);
                 cr.Stroke();
 
                 cr.SetSourceColor(chameleon3);
-                var info = $"{unit.Class.Name}\n{unit.Velocity.Length() * 3.6:F1} km/h";
-                if (controllerMap != null && controllerMap.ContainsKey(unitIndex)) {
-                    info += "\n" + controllerMap[unitIndex].SchedulerState;
-                }
                 DrawTextBold(cr, info, posCS, fontSize);
+
                 unitIndex++;
             }
 
