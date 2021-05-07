@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using TSIM.WebServer.Models;
