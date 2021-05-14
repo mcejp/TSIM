@@ -42,19 +42,13 @@ namespace TSIM.SimServer
             var connection = factory.CreateConnection();
             var channel = connection.CreateModel();
 
-            channel.QueueDeclare(queue: "UnitDatabase_full.json",
-                                 durable: false,
-                                 exclusive: false,
-                                 autoDelete: false,
-                                 arguments: null);
+            channel.ExchangeDeclare(exchange: "UnitDatabase_full.json",
+                                    type: ExchangeType.Fanout);
 
-            channel.QueueDeclare(queue: "TrainControl_full.json",
-                                 durable: false,
-                                 exclusive: false,
-                                 autoDelete: false,
-                                 arguments: null);
-            // End Init RabbitMQ
+            channel.ExchangeDeclare(exchange: "TrainControl_full.json",
+                                    type: ExchangeType.Fanout);
 
+            // Init Signal log
             var eh = log.GetEntityHandle(typeof(Program), -1);
             var perfPin = log.GetSignalPin(eh, "timeUtilization");
 
@@ -89,16 +83,16 @@ namespace TSIM.SimServer
                 {
                     var unitsSnapshot = sim.Units.SnapshotFullMake();
 
-                    channel.BasicPublish(exchange: "",
-                                         routingKey: "UnitDatabase_full.json",
+                    channel.BasicPublish(exchange: "UnitDatabase_full.json",
+                                         routingKey: "",
                                          basicProperties: null,
                                          body: unitsSnapshot);
 
                     var controllerMap = sim.GetControllerStateSummary();
                     var controlSnapshot = Serialization.SerializeTrainControlStateToJsonUtf8Bytes(controllerMap);
 
-                    channel.BasicPublish(exchange: "",
-                                         routingKey: "TrainControl_full.json",
+                    channel.BasicPublish(exchange: "TrainControl_full.json",
+                                         routingKey: "",
                                          basicProperties: null,
                                          body: controlSnapshot);
                 }

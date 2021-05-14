@@ -55,17 +55,16 @@ namespace TSIM.WebServer
             var connection = factory.CreateConnection();
 
             var channel = connection.CreateModel();
-            channel.QueueDeclare(queue: "UnitDatabase_full.json",
-                                 durable: false,
-                                 exclusive: false,
-                                 autoDelete: false,
-                                 arguments: null);
 
-            channel.QueueDeclare(queue: "TrainControl_full.json",
-                                 durable: false,
-                                 exclusive: false,
-                                 autoDelete: false,
-                                 arguments: null);
+            var unitDatabaseQueue = channel.QueueDeclare().QueueName;
+            channel.QueueBind(queue: unitDatabaseQueue,
+                              exchange: "UnitDatabase_full.json",
+                              routingKey: "");
+
+            var trainControlQueue = channel.QueueDeclare().QueueName;
+            channel.QueueBind(queue: trainControlQueue,
+                              exchange: "TrainControl_full.json",
+                              routingKey: "");
 
             var consumer = new EventingBasicConsumer(channel);
             consumer.Received += (model, ea) =>
@@ -92,11 +91,11 @@ namespace TSIM.WebServer
                 uglyGlobalTCSS = controlStateMap;
             };
 
-            channel.BasicConsume(queue: "UnitDatabase_full.json",
+            channel.BasicConsume(queue: unitDatabaseQueue,
                                   autoAck: true,
                                   consumer: consumer);
 
-            channel.BasicConsume(queue: "TrainControl_full.json",
+            channel.BasicConsume(queue: trainControlQueue,
                                   autoAck: true,
                                   consumer: consumer2);
         }
