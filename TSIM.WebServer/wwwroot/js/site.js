@@ -16,6 +16,7 @@ function refreshCamerasFirst() {
 $(function() {
     setTimeout(refreshCamerasFirst, 1000);
 
+    /*
     $('#unit-0-speed-set').click(() => {
         const data = {'unit': 0, 'speed': Number.parseFloat($('#unit-0-speed').val())};
         $.ajax({
@@ -25,4 +26,5 @@ $(function() {
         contentType: 'application/json'
         });
     });
+    */
 });
