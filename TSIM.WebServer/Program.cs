@@ -57,11 +57,15 @@ namespace TSIM.WebServer
             var channel = connection.CreateModel();
 
             var unitDatabaseQueue = channel.QueueDeclare().QueueName;
+            channel.ExchangeDeclare(exchange: "UnitDatabase_full.json",
+                                    type: ExchangeType.Fanout);
             channel.QueueBind(queue: unitDatabaseQueue,
                               exchange: "UnitDatabase_full.json",
                               routingKey: "");
 
             var trainControlQueue = channel.QueueDeclare().QueueName;
+            channel.ExchangeDeclare(exchange: "TrainControl_full.json",
+                                    type: ExchangeType.Fanout);
             channel.QueueBind(queue: trainControlQueue,
                               exchange: "TrainControl_full.json",
                               routingKey: "");
