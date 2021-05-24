@@ -100,11 +100,12 @@ namespace TSIM.WebServer
                     // Wrap in CBOR & publish
 
                     var cbor = CBORObject.NewMap()
-                        .Add("objects", CBORObject.NewArray().Add(
-                            CBORObject.NewMap().Add("name", "main").Add("displayName", "TSIM View").Add("mimeType", contentType).Add("data", filedata)
-                        ))
+                        .Add("objects", CBORObject.NewArray()
+                            .Add(CBORObject.NewMap().Add("name", "main").Add("displayName", "TSIM View").Add("mimeType", contentType).Add("data", filedata))
+                            .Add(ControlSystemStateMapToCbor(Program.uglyGlobalTCSS))
+                        )
                         .Add("controls", CBORObject.NewArray())
-                    ;
+                        ;
 
                     channel.BasicPublish(exchange: "TSIM.cbor",
                                          routingKey: "",
@@ -137,5 +138,25 @@ namespace TSIM.WebServer
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
+
+        private static CBORObject ControlSystemStateMapToCbor(IDictionary<int, TrainControlStateSummary> map) {
+            var cborMap = CBORObject.NewMap();
+
+            foreach (var entry in map) {
+                var repr = CBORObject.NewMap()
+                    .Add("schedulerState", entry.Value.SchedulerState)
+                    .Add("numSegmentsToFollow", entry.Value.SegmentsToFollow?.Length)
+                    ;
+
+                cborMap.Add(entry.Key.ToString(), repr);
+            }
+
+            return CBORObject.NewMap()
+                .Add("name", "control-system-state")
+                .Add("displayName", "Control System State")
+                .Add("mimeType", "TSIM.ControlSystemStateMap")
+                .Add("data", cborMap)
+                ;
+        }
     }
 }
