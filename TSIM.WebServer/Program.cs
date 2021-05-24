@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using System.Collections.Generic;
 
+using PeterO.Cbor;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -70,6 +71,9 @@ namespace TSIM.WebServer
                               exchange: "TrainControl_full.json",
                               routingKey: "");
 
+            channel.ExchangeDeclare(exchange: "TSIM.cbor",
+                                    type: ExchangeType.Fanout);
+
             var consumer = new EventingBasicConsumer(channel);
             consumer.Received += (model, ea) =>
             {
@@ -80,6 +84,32 @@ namespace TSIM.WebServer
                 lock (sim)
                 {
                     sim.Units.SnapshotFullRestore(body);
+
+                    // Render outputs
+
+                    var filename = "/tmp/tmp.png";
+                    var w = 1400;
+                    var h = 1000;
+                    var scale = 0.150;          // TODO: automatically determine boundaries of view
+                    var fontSize = 9;
+                    GraphicsOutput.RenderPng(sim.CoordSpace, sim.Network, sim.Units, Program.uglyGlobalTCSS, filename, w, h, scale, fontSize);
+
+                    byte[] filedata = System.IO.File.ReadAllBytes(filename);
+                    string contentType = "image/png";
+
+                    // Wrap in CBOR & publish
+
+                    var cbor = CBORObject.NewMap()
+                        .Add("objects", CBORObject.NewArray().Add(
+                            CBORObject.NewMap().Add("name", "main").Add("displayName", "TSIM View").Add("mimeType", contentType).Add("data", filedata)
+                        ))
+                        .Add("controls", CBORObject.NewArray())
+                    ;
+
+                    channel.BasicPublish(exchange: "TSIM.cbor",
+                                         routingKey: "",
+                                         basicProperties: null,
+                                         body: cbor.EncodeToBytes());
                 }
             };
 
