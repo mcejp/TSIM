@@ -23,8 +23,13 @@ public class TrainControlStateSummary {
     [JsonPropertyName("schedulerState")]
     public string? SchedulerState { get; set; }
 
+    // speed, scheduling mode ...
+
     [JsonPropertyName("segmentsToFollow")]
     public SegmentToFollow[]? SegmentsToFollow { get; set; }
+
+    public string? WaypointControllerState { get; set; }
+    public string? TractionControllerState { get; set; }
 }
 
 // Wrapper for all the different controllers needed for a train.
@@ -62,6 +67,9 @@ public class TrainControlStack {
         SegmentsToFollow = _latestRtcCommand?.segmentsToFollow?.Select(tuple => new TrainControlStateSummary.SegmentToFollow {
                 SegmentId = tuple.segmentId, EntryEp = tuple.entryEp, SegmentLength = tuple.segmentLength, GoalT = tuple.goalT,
             }).ToArray(),
+
+        WaypointControllerState = _waypointController.GetStatus().State.ToString(),
+        TractionControllerState = _tractionController.GetState().ToString(),
         };
 
     private string GetStateString() => _scheduleController.GetState().ToString();

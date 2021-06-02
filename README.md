@@ -16,16 +16,16 @@ Transport simulation playground
 ### Other IDEs (VS Code), command line
 
     mkdir -p work
-    dotnet run --project TSIM/TSIM.csproj -- work/simdb.sqlite \
+    dotnet run --project TSIM -- work/simdb.sqlite \
             --importscenario maps/cern1.json \
             --simulate \
             --rendersvg work/output.svg
-    dotnet run --project TSIM.SimServer/TSIM.SimServer.csproj
+    dotnet run --project TSIM.SimServer
     # + in another shell:
-    dotnet run --project TSIM.WebServer/TSIM.WebServer.csproj
+    dotnet watch --project TSIM.WebServer run
 
     # alternatively, to be reachable from the internet
-    dotnet run --project TSIM.WebServer/TSIM.WebServer.csproj --launch-profile Production --urls http://0.0.0.0:5000\;https://0.0.0.0:5001
+    dotnet run --project TSIM.WebServer --launch-profile Production --urls http://0.0.0.0:5000\;https://0.0.0.0:5001
 
 ### Visualizing data post-mortem
 
@@ -33,7 +33,7 @@ Use the provided Jupyter notebook to load and visualize the generated _simlog.cs
 
 ## How to run tests
 
-   dotnet test TSIM.Tests/TSIM.Tests.csproj
+   dotnet test TSIM.Tests
 
 ## Extracting dataset (Praha subway)
 
@@ -48,3 +48,5 @@ Then import OSM into QGIS... and do what?
 ## Installing .NET Core
 
 See: https://dotnet.microsoft.com/download/dotnet/5.0
+
+You will also need host Cairo and Pango libraries (e.g. `dnf install cairo paingo` on RHEL/CentOS/Fedora)

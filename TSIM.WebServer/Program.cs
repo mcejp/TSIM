@@ -146,6 +146,8 @@ namespace TSIM.WebServer
                 var repr = CBORObject.NewMap()
                     .Add("schedulerState", entry.Value.SchedulerState)
                     .Add("numSegmentsToFollow", entry.Value.SegmentsToFollow?.Length)
+                    .Add("waypointControllerState", entry.Value.WaypointControllerState)
+                    .Add("tractionControllerState", entry.Value.TractionControllerState)
                     ;
 
                 cborMap.Add(entry.Key.ToString(), repr);
