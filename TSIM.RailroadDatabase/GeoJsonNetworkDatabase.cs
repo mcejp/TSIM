@@ -11,6 +11,8 @@ namespace TSIM.RailroadDatabase
 {
     public class GeoJsonNetworkDatabase : INetworkDatabase
     {
+        private const float DeduplicationEndpointDistTolerance = 0.001f;
+
         private readonly SimulationCoordinateSpace _coordinateSpace;
         private readonly List<Segment> _segments = new List<Segment>();
         private readonly List<SegmentLink> _segmentLinks;
@@ -77,7 +79,7 @@ namespace TSIM.RailroadDatabase
 
             foreach (var seg in _segments)
             {
-                var candidates = quadTree.FindSegmentEndpointsNear(seg.GetEndpoint(SegmentEndpoint.Start), 0.001f);
+                var candidates = quadTree.FindSegmentEndpointsNear(seg.GetEndpoint(SegmentEndpoint.Start), DeduplicationEndpointDistTolerance);
 
                 bool match = false;
 
