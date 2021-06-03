@@ -50,3 +50,11 @@ Then import OSM into QGIS... and do what?
 See: https://dotnet.microsoft.com/download/dotnet/5.0
 
 You will also need host Cairo and Pango libraries (e.g. `dnf install cairo paingo` on RHEL/CentOS/Fedora)
+
+## Editing with QGIS
+
+TODO: add sources to repo
+
+- edit source data
+- manually merge cern1_track + cern1_stops into cern1.geojson
+- re-run imporscenario

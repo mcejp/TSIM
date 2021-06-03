@@ -1,6 +1,7 @@
 using Priority_Queue;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using TSIM.Model;
 
 namespace TSIM.RailroadDatabase {
@@ -35,6 +36,8 @@ public class RoutePlanner {
         Console.WriteLine($"PlanRoute(({originSegmentId},{originT}->{originDirection}) ==> ({destinationSegmentId}, {destinationT}))");
 
         Segment originSegment = _network.GetSegmentById(originSegmentId);
+        Trace.Assert(originSegment.CanGoTowards(originDirection));
+
         Segment destinationSegment = _network.GetSegmentById(destinationSegmentId);
         var destinationPoint = destinationSegment.GetPoint(destinationT);
 
@@ -42,7 +45,8 @@ public class RoutePlanner {
         var queue = new SimplePriorityQueue<RoutePoint>();
         var added = new HashSet<(int, SegmentEndpoint)>();
 
-        // insert segments following origin
+        // Find and insert segments connected directly to origin segment
+
         float initialCost = originSegment.DistanceToEndpoint(originT, originDirection);
         float heuristicCost = (originSegment.GetEndpoint(originDirection) - destinationPoint).Length();
 
@@ -61,9 +65,16 @@ public class RoutePlanner {
             }
         }
 
+        // Now descend into the priority queue and look for a way towards the goal
+
         for (int iteration = 0; queue.Count != 0; iteration++) {
             var candidate = queue.Dequeue();
             var segment = _network.GetSegmentById(candidate.SegmentId);
+
+            if (!segment.CanEnterFrom(candidate.EntryEp))  {
+                continue;
+            }
+
             candidate.segmentLength = segment.GetLength();
             //Console.WriteLine($"Try ({candidate.SegmentId}, {candidate.EntryEp})");
 

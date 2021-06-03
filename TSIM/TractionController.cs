@@ -28,7 +28,7 @@ public struct TrainStatus {
 public struct TractionControllerCommand {
     public (int segmentId, SegmentEndpoint entryEp, float segmentLength, float goalT)[] segmentsToFollow;
 
-    public static readonly TractionControllerCommand STOP = new TractionControllerCommand{segmentsToFollow = new (int, SegmentEndpoint, float, float)[] {}};
+    public static readonly TractionControllerCommand STOP = new TractionControllerCommand{segmentsToFollow = Array.Empty<(int, SegmentEndpoint, float, float)>() };
 }
 
 public class TractionController {

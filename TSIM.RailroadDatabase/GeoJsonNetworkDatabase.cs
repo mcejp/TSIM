@@ -17,8 +17,8 @@ namespace TSIM.RailroadDatabase
         private readonly List<Segment> _segments = new List<Segment>();
         private readonly List<SegmentLink> _segmentLinks;
 
-        private QuadTree _quadTree;
-        private Dictionary<string, Station> _stations;
+        private readonly QuadTree _quadTree;
+        private readonly Dictionary<string, Station> _stations;
 
         public GeoJsonNetworkDatabase(SimulationCoordinateSpace coordinateSpace, string path)
         {
@@ -98,7 +98,7 @@ namespace TSIM.RailroadDatabase
                 }
 
                 quadTree.InsertSegment(seg);
-                uniqueSegments.Add(new Segment(1 + uniqueSegments.Count, seg.Type, seg.ControlPoints));
+                uniqueSegments.Add(new Segment(1 + uniqueSegments.Count, seg.Type, seg.ControlPoints, oneway: seg.Oneway));
             }
 
             return uniqueSegments;
@@ -170,11 +170,21 @@ namespace TSIM.RailroadDatabase
         {
             Trace.Assert(feature.GetProperty("type").GetString().Equals("Feature"));
 
+            var properties = feature.GetProperty("properties");
+
+            bool oneway = false;
+
+            if (properties.TryGetProperty("oneway", out var onewayProperty))
+            {
+                // TODO: validate value
+                oneway = "yes".Equals(onewayProperty.GetString());
+            }
+
             if (feature.GetProperty("geometry").GetProperty("type").GetString().Equals("LineString"))
             {
                 var coordinates = feature.GetProperty("geometry").GetProperty("coordinates").EnumerateArray();
 
-                return ProcessLineString(segments, coordinates);
+                return ProcessLineString(segments, coordinates, oneway: oneway);
             }
             else if (feature.GetProperty("geometry").GetProperty("type").GetString().Equals("MultiLineString"))
             {
@@ -182,7 +192,7 @@ namespace TSIM.RailroadDatabase
 
                 foreach (JsonElement coordinates in feature.GetProperty("geometry").GetProperty("coordinates").EnumerateArray())
                 {
-                    maxCoordinate = Math.Max(maxCoordinate, ProcessLineString(segments, coordinates.EnumerateArray()));
+                    maxCoordinate = Math.Max(maxCoordinate, ProcessLineString(segments, coordinates.EnumerateArray(), oneway: oneway));
                 }
 
                 return maxCoordinate;
@@ -191,7 +201,7 @@ namespace TSIM.RailroadDatabase
             return 0;
         }
 
-        private float ProcessLineString(List<Segment> segments, JsonElement.ArrayEnumerator coordinates)
+        private float ProcessLineString(List<Segment> segments, JsonElement.ArrayEnumerator coordinates, bool oneway)
         {
             float maxCoordinate = 0;
             Vector3? lastOrNull = null;
@@ -208,7 +218,7 @@ namespace TSIM.RailroadDatabase
                 if (lastOrNull is Vector3 last)
                 {
                     var segmentId = 1 + segments.Count;
-                    var seg = new Segment(segmentId, SegmentType.Rail, last, vec);
+                    var seg = new Segment(segmentId, SegmentType.Rail, last, vec, oneway: oneway);
                     segments.Add(seg);
                 }
 

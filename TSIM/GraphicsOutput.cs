@@ -10,12 +10,14 @@ namespace TSIM
 {
     public class GraphicsOutput
     {
+        // http://tango.freedesktop.org/Tango_Icon_Theme_Guidelines#Color_Palette
         private static readonly Color chameleon1 = FromHex("#8ae234");
         private static readonly Color chameleon3 = FromHex("#4e9a06");
         private static readonly Color scarledRed1 = FromHex("#ef2929");
         private static readonly Color plum1 = FromHex("#ad7fa8");
         private static readonly Color aluminium1 = FromHex("#eeeeec");
         private static readonly Color aluminium2 = FromHex("#d3d7ef");
+        private static readonly Color aluminium5 = FromHex("#555753");
         private static readonly Color aluminium6 = FromHex("#2e3436");
         private static readonly Color skyBlue1 = FromHex("#729fcf");
         private static readonly Color skyBlue2 = FromHex("#3465a4");
@@ -77,7 +79,7 @@ namespace TSIM
                 var end = SimToCanvasSpace(seg.ControlPoints[1], center, scale);
 
                 cr.LineWidth = railLineWidth;
-                cr.SetSourceColor(aluminium6);
+                cr.SetSourceColor(seg.Oneway == false ? aluminium6 : aluminium5);
                 cr.MoveTo(start);
                 cr.LineTo(end);
                 cr.Stroke();

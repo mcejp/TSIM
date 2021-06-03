@@ -200,7 +200,7 @@ namespace TSIM.RailroadDatabase
             }
 
             // Compute the plan
-            List<TrajectorySegment> plan = new List<TrajectorySegment>();
+            var plan = new List<TrajectorySegment>();
 
             var (station, stop, distance1, head) = best.Value;
 
@@ -250,6 +250,7 @@ namespace TSIM.RailroadDatabase
                 {
                     if (stop.T > t)
                     {
+                        // We are facing towards End, and the stop is in the right direction
                         stopDistance = distance + seg.GetLength() * (stop.T - t);
                     }
                     else
@@ -259,8 +260,9 @@ namespace TSIM.RailroadDatabase
                 }
                 else
                 {
-                    if (stop.T < t)
+                    if (stop.T < t && !seg.Oneway)
                     {
+                        // We are facing towards Start, the stop is in the right direction, and this is not one-way track
                         stopDistance = distance + seg.GetLength() * (t - stop.T);
                     }
                     else

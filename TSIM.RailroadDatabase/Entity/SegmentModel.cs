@@ -7,17 +7,26 @@ using TSIM.Model;
 
 namespace TSIM.RailroadDatabase.Entity
 {
+    // Even when there is a full constructor, Entity Framework seems to require setters for all properties. (these can be init setters, though)
+    // Otherwise it (confusingly) complains about not being able to bind the constructor arguments.
+    //
+    // This still sucks, because there is for example nothing enforcing initialization of all fields in the constructor.
     [Table("segment")]
     public class SegmentModel
     {
-        public int Id { get; set; }
-        public SegmentType Type { get; set; }
+        public int Id { get; init; }
+        public SegmentType Type { get; init; }
 
         [MaxLength(2*3*sizeof(float))]
-        public byte[] ControlPoints { get; set; }
+        public byte[] ControlPoints { get; init; }
+        public bool Oneway { get; init; }
 
-        private SegmentModel()
+        public SegmentModel(int id, SegmentType type, byte[] controlPoints, bool oneway)
         {
+            Id = id;
+            Type = type;
+            ControlPoints = controlPoints;
+            Oneway = oneway;
         }
 
         public SegmentModel(Model.Segment segment)
@@ -25,6 +34,7 @@ namespace TSIM.RailroadDatabase.Entity
             Id = segment.Id;
             Type = segment.Type;
             ControlPoints = new byte[segment.ControlPoints.Length * 3 * sizeof(float)];
+            Oneway = segment.Oneway;
 
             var arr = new float[3 * segment.ControlPoints.Length];
 
@@ -47,7 +57,7 @@ namespace TSIM.RailroadDatabase.Entity
                 cp[i] = new Vector3(arr[3 * i + 0], arr[3 * i + 1], arr[3 * i + 2]);
             }
 
-            return new Model.Segment(Id, Type, cp);
+            return new Model.Segment(Id, Type, cp, oneway: Oneway);
         }
     }
 }

@@ -4,24 +4,27 @@ using System.Numerics;
 
 namespace TSIM.Model
 {
-    public struct Segment
+    public readonly struct Segment
     {
         public readonly int Id;
         public readonly SegmentType Type;
         public readonly Vector3[] ControlPoints;            // in simulation space
+        public readonly bool Oneway;                        // TODO: more general treatment of attributes?
 
-        public Segment(int id, SegmentType type, Vector3 start, Vector3 end)
+        public Segment(int id, SegmentType type, Vector3 start, Vector3 end, bool oneway)
         {
             Id = id;
             Type = type;
             ControlPoints = new[] {start, end};
+            Oneway = oneway;
         }
 
-        public Segment(int id, SegmentType type, Vector3[] controlPoints)
+        public Segment(int id, SegmentType type, Vector3[] controlPoints, bool oneway)
         {
             Id = id;
             Type = type;
             ControlPoints = controlPoints;
+            Oneway = oneway;
         }
 
         public (Vector3 closest, float t) GetClosestPointOnSegmentToPoint(Vector3 point)
@@ -62,7 +65,7 @@ namespace TSIM.Model
         {
             return ep switch {
                 SegmentEndpoint.Start => ControlPoints[0],
-                SegmentEndpoint.End => ControlPoints[ControlPoints.Length - 1]
+                SegmentEndpoint.End => ControlPoints[^1]
             };
         }
 
@@ -111,6 +114,10 @@ namespace TSIM.Model
             Trace.Assert(ControlPoints.Length == 2);
             Trace.Assert(other.ControlPoints.Length == 2);
 
+            if (Oneway != other.Oneway) {
+                return false;
+            }
+
             return ((ControlPoints[0] - other.ControlPoints[0]).Length() < 0.001f &&
                     (ControlPoints[1] - other.ControlPoints[1]).Length() < 0.001f)
                    || ((ControlPoints[0] - other.ControlPoints[1]).Length() < 0.001f &&
@@ -122,6 +129,16 @@ namespace TSIM.Model
             string controlPoints = string.Join(",", ControlPoints.Select(x => x.ToString()).ToArray());
 
             return $"({nameof(Id)}: {Id}, {nameof(Type)}: {Type}, {nameof(ControlPoints)}: {controlPoints})";
+        }
+
+        public bool CanEnterFrom(SegmentEndpoint endpoint)
+        {
+            return !Oneway || endpoint == SegmentEndpoint.Start;
+        }
+
+        public bool CanGoTowards(SegmentEndpoint endpoint)
+        {
+            return !Oneway || endpoint == SegmentEndpoint.End;
         }
     }
 }
