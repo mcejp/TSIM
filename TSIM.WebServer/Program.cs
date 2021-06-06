@@ -101,7 +101,13 @@ namespace TSIM.WebServer
 
                     var cbor = CBORObject.NewMap()
                         .Add("objects", CBORObject.NewArray()
-                            .Add(CBORObject.NewMap().Add("name", "main").Add("displayName", "TSIM View").Add("mimeType", contentType).Add("data", filedata))
+                            .Add(CBORObject.NewMap()
+                                .Add("name", "main")    // deprecated
+                                .Add("topic", "main")
+                                .Add("displayName", "TSIM View")
+                                .Add("mimeType", contentType)
+                                .Add("data", filedata)
+                            )
                             .Add(ControlSystemStateMapToCbor(Program.uglyGlobalTCSS))
                         )
                         .Add("controls", CBORObject.NewArray())
@@ -154,7 +160,8 @@ namespace TSIM.WebServer
             }
 
             return CBORObject.NewMap()
-                .Add("name", "control-system-state")
+                .Add("name", "control-system-state")    // deprecated
+                .Add("topic", "control-system-state")
                 .Add("displayName", "Control System State")
                 .Add("mimeType", "TSIM.ControlSystemStateMap")
                 .Add("data", cborMap)
