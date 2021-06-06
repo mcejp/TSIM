@@ -21,6 +21,8 @@ public class RoutePlan {
 }
 
 public class RoutePlanner {
+    private const bool ExtraVerbosity = false;
+
     private readonly INetworkDatabase _network;
 
     public RoutePlanner(INetworkDatabase network) {
@@ -82,15 +84,17 @@ public class RoutePlanner {
                 // Found a path
                 float totalCost = candidate.CostToReach + segment.DistanceToEndpoint(destinationT, candidate.EntryEp);
 
-                Console.WriteLine($"PlanRoute finished after {iteration} iterations");
-                Console.WriteLine($"Now displaying {candidate.ChainLength}-element path starting from (Segment={originSegmentId} Pos={originSegment.GetPoint(originT)})");
-                Console.WriteLine($" - {originSegment.DistanceToEndpoint(originT, originDirection),6:F2}m in origin segment {originSegmentId} from t={originT} to {originDirection}");
+                if (ExtraVerbosity) {
+                    Console.WriteLine($"PlanRoute finished after {iteration} iterations");
+                    Console.WriteLine($"Now displaying {candidate.ChainLength}-element path starting from (Segment={originSegmentId} Pos={originSegment.GetPoint(originT)})");
+                    Console.WriteLine($" - {originSegment.DistanceToEndpoint(originT, originDirection),6:F2}m in origin segment {originSegmentId} from t={originT} to {originDirection}");
 
-                DisplayChain(candidate);
+                    DisplayChain(candidate);
 
-                Console.WriteLine($" - {segment.DistanceToEndpoint(destinationT, candidate.EntryEp),6:F2}m in destination segment {destinationSegmentId} from {candidate.EntryEp} to t={destinationT}");
-                Console.WriteLine($"Total cost: {totalCost}");
-                Console.WriteLine();
+                    Console.WriteLine($" - {segment.DistanceToEndpoint(destinationT, candidate.EntryEp),6:F2}m in destination segment {destinationSegmentId} from {candidate.EntryEp} to t={destinationT}");
+                    Console.WriteLine($"Total cost: {totalCost}");
+                    Console.WriteLine();
+                }
 
                 var plan = new RoutePlan{route = new (int, SegmentEndpoint, float, float)[candidate.ChainLength], totalCost = totalCost};
 

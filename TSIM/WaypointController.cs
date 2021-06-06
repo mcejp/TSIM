@@ -148,6 +148,7 @@ public class WaypointController {
         // FIXME: wrong! correct to set this _only_ after arrival confirmation!
         _lastStationGoneTo = stationId;
 
+        // FIXME: at the moment, this will only try the first stop of the station
         foreach (var stop in station.Stops) {
             int destinationSegmentId = stop.SegmentId;
             float destinationT = stop.T;
@@ -165,7 +166,7 @@ public class WaypointController {
                     _currentPlanCommand.Value.segmentsToFollow[1 + i] = entry;
                 }
 
-                PrintPlan(_currentPlanCommand.Value);
+                // PrintPlan(_currentPlanCommand.Value);
 
                 _state = State.EN_ROUTE;
 

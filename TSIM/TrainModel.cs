@@ -42,12 +42,12 @@ public class TrainModel {
         // Perfect finish
         // Console.WriteLine($"Test for perfect finish: {distToGoal} <? {2 * v * dt} && {v} <? {2 * decelNom * dt}");
         if (distToGoal < 2 * v * dt && v < 2 * decelNom * dt) {
-            Console.WriteLine($"Perfect finish:");
-            Console.WriteLine($"    v(t) = {v:F2}, s = {distToGoal:F3}");
+            // Console.WriteLine($"Perfect finish:");
+            // Console.WriteLine($"    v(t) = {v:F2}, s = {distToGoal:F3}");
             var a1 = -1.5f / dt * v + distToGoal / (dt * dt);
             var a2 =  0.5f / dt * v - distToGoal / (dt * dt);
             var ds = v * dt + 0.5f * a1 * dt * dt + (v + a1 * dt) * dt + 0.5f * a2 * dt * dt;
-            Console.WriteLine($"    a(t) = {a1:F2}, a(t+dt) = {a2:F2}, estimated ds(t..t+2dt) = {ds:F3}");
+            // Console.WriteLine($"    a(t) = {a1:F2}, a(t+dt) = {a2:F2}, estimated ds(t..t+2dt) = {ds:F3}");
 
             // returning "v" as v1 here is a bit dubious, but we'll let it fly (in any case it's just for info)
             return (a1, v, CalculationMode.PERFECT_FINISH);
@@ -71,15 +71,15 @@ public class TrainModel {
             var ds = v * dt + 0.5f * a * dt * dt;
 
             if (ds > distToGoal) {
-                Console.WriteLine($"Without intervention, we will overshoot the goal by next step:");
-                Console.WriteLine($"    a(t) = {a:F2}, v(t) = {v:F2}, ds = {ds:F3} > {distToGoal:F3}");
+                // Console.WriteLine($"Without intervention, we will overshoot the goal by next step:");
+                // Console.WriteLine($"    a(t) = {a:F2}, v(t) = {v:F2}, ds = {ds:F3} > {distToGoal:F3}");
 
                 // This is essentially equivalent to dead-beat control, just with explicit physical equations
                 a = 2 * (distToGoal - v * dt) / (dt * dt);
                 ds = v * dt + 0.5f * a * dt * dt;
 
-                Console.WriteLine($"  new estimation:");
-                Console.WriteLine($"    a(t) = {a:F2}, v(t) = {v:F2}, ds = {ds:F3}");
+                // Console.WriteLine($"  new estimation:");
+                // Console.WriteLine($"    a(t) = {a:F2}, v(t) = {v:F2}, ds = {ds:F3}");
                 mode = CalculationMode.ACCELERATE_PREVENT_OVERSHOOT;
             }
         }
@@ -97,8 +97,8 @@ public class TrainModel {
                 var a_next = -v_next * v_next / (2 * distToGoal_next);
 
                 if (a_next < -decelNom) {
-                    Console.WriteLine($"Warning: too steep deceleration will be needed in next step (case v1 < v): ");
-                    Console.WriteLine($"    a(t) = {a:F2}, v(t) = {v:F2}, v1(t) = {v1:F2}, a(t+dt) = {a_next:F2}, v(t+dt) = {v_next:F2}, v1(t+dt) = {v1_next:F2}");
+                    // Console.WriteLine($"Warning: too steep deceleration will be needed in next step (case v1 < v): ");
+                    // Console.WriteLine($"    a(t) = {a:F2}, v(t) = {v:F2}, v1(t) = {v1:F2}, a(t+dt) = {a_next:F2}, v(t+dt) = {v_next:F2}, v1(t+dt) = {v1_next:F2}");
                 }
             }
 
@@ -117,20 +117,20 @@ public class TrainModel {
             float a_next = -v_next * v_next / (2 * distToGoal_next);
 
             if (a_next < -decelNom) {
-                Console.WriteLine($"Without intervention, too steep deceleration will be needed in next step (case v1 > v):");
-                Console.WriteLine($"    a(t) = {a:F2}, v(t) = {v:F2}, v1(t) = {v1:F2}, a(t+dt) = {a_next:F2}, v(t+dt) = {v_next:F2}, v1(t+dt) = {v1_next:F2}");
+                // Console.WriteLine($"Without intervention, too steep deceleration will be needed in next step (case v1 > v):");
+                // Console.WriteLine($"    a(t) = {a:F2}, v(t) = {v:F2}, v1(t) = {v1:F2}, a(t+dt) = {a_next:F2}, v(t+dt) = {v_next:F2}, v1(t+dt) = {v1_next:F2}");
 
                 float A = dt * dt;
                 float b = 2 * v * dt + decelNom * dt * dt;
                 float c = -2 * decelNom * distToGoal + 2 * decelNom * v * dt + v * v;
-                Console.WriteLine($"  B^2 = {b * b:F2}, 4AC = {4 * A * c:F2}");
+                // Console.WriteLine($"  B^2 = {b * b:F2}, 4AC = {4 * A * c:F2}");
 
                 float discriminant = b * b - 4 * A * c;
 
                 if (discriminant >= 0) {
                     var a1 = (-b + (float)Math.Sqrt(discriminant)) / (2 * A);
                     var a2 = (-b - (float)Math.Sqrt(discriminant)) / (2 * A);
-                    Console.WriteLine($"  a1,2 = {a1:F2}; {a2:F2}");
+                    // Console.WriteLine($"  a1,2 = {a1:F2}; {a2:F2}");
 
                     a = a1;
                 }
@@ -144,8 +144,8 @@ public class TrainModel {
                 v1_next = Math.Min((float) Math.Sqrt(2 * distToGoal_next * decelNom), maxVelocity);
                 a_next = -v_next * v_next / (2 * distToGoal_next);
 
-                Console.WriteLine($"  new estimation:");
-                Console.WriteLine($"    a(t+dt) = {a_next:F2}, v(t+dt) = {v_next:F2}, v1(t+dt) = {v1_next:F2}");
+                // Console.WriteLine($"  new estimation:");
+                // Console.WriteLine($"    a(t+dt) = {a_next:F2}, v(t+dt) = {v_next:F2}, v1(t+dt) = {v1_next:F2}");
 
                 mode = CalculationMode.TIMELY_BRAKE;
             }

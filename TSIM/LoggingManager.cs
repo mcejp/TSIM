@@ -53,7 +53,7 @@ namespace TSIM
         {
             if (!_lastEmit.ContainsKey(logTarget) || _lastEmit[logTarget].ElapsedMilliseconds > 2000)
             {
-                Console.WriteLine($"{logTarget}: {text}");
+                // Console.WriteLine($"{logTarget}: {text}");
                 _lastEmit[logTarget] = Stopwatch.StartNew();
             }
 
