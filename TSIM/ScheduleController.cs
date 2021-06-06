@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace TSIM {
@@ -16,6 +17,9 @@ public struct ScheduleEntry {
     //     ArrivalTime = arrivalTime;
     //     DepartureTime = departureTime;
     // }
+
+    public override string ToString() =>
+        $"(station={StationId} arrival={ArrivalTime.ToLongTimeString()} depart={DepartureTime.ToLongTimeString()} boarding={MinimumBoardingTime})";
 }
 
 public class ScheduleController {
@@ -39,7 +43,7 @@ public class ScheduleController {
     private static readonly TimeSpan boardingTimeInAutoScheduleMode = TimeSpan.FromSeconds(10);
 
     private State _state = State.STOPPED;
-    private ScheduleEntry[] _schedule = {};
+    private List<ScheduleEntry> _schedule = new();
     private int _schedulePos;
     private DateTime? _boardingEndTime;
 
@@ -54,6 +58,8 @@ public class ScheduleController {
         _statePin = _log.GetSignalPin(eh, "state");
         _schedulePosPin = _log.GetSignalPin(eh, "schedulePos");
     }
+
+    public ScheduleEntry[] GetSchedule() => _schedule.ToArray();
 
     public State GetState() => _state;
 
@@ -74,14 +80,25 @@ public class ScheduleController {
                     case State.STOPPED:
                     case State.BOARDING_COMPLETE:
                     case State.EN_ROUTE:
-                        // TODO: might need to update departure time
+                        if (_state == State.BOARDING_COMPLETE) {
+                            // TODO: might want to update departure time
+                        }
+
                         wpc = new WaypointControllerCommand { mode = WaypointController.Mode.GOTO_NEAREST_STATION };
                         _state = State.GOTO_NEAREST_STATION;
                         break;
 
                     case State.GOTO_NEAREST_STATION:
                         if (wpcStatus.State == WaypointController.State.ARRIVED) {
-                            // TODO: update arrival time + add station to auto-schedule
+                            // Update arrival time + add station to auto-schedule
+                            int stationArrived = wpcStatus.ArrivedAtStation.Value;
+
+                            _schedule.Add(new ScheduleEntry {
+                                ArrivalTime = simTime,
+                                DepartureTime = simTime + boardingTimeInAutoScheduleMode,
+                                MinimumBoardingTime = boardingTimeInAutoScheduleMode,
+                                StationId = stationArrived,
+                            });
 
                             _boardingEndTime = simTime + boardingTimeInAutoScheduleMode;
                             _state = State.BOARDING;
@@ -143,7 +160,7 @@ public class ScheduleController {
         // check schedule -> how do we tell whether to start boarding or going to next station?
         // do we have a schedule ?
 
-        if (_schedule.Length == 0) {
+        if (_schedule.Count == 0) {
             if (_state != State.NO_SCHEDULE) {
                 _log.Feed(_infoPin, "Cannot start navigation -- no orders in schedule");
                 _state = State.NO_SCHEDULE;
@@ -154,7 +171,7 @@ public class ScheduleController {
             }
         }
 
-        if (_schedulePos >= _schedule.Length) {
+        if (_schedulePos >= _schedule.Count) {
             _schedulePos = 0;
         }
 
@@ -167,7 +184,7 @@ public class ScheduleController {
     }
 
     public void SetSchedule(ScheduleEntry[] scheduleEntries) {
-        _schedule = scheduleEntries;
+        _schedule = new(scheduleEntries);
         _schedulePos = 0;
         _state = State.EN_ROUTE;
     }

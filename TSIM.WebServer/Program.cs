@@ -9,7 +9,6 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 using TSIM.RailroadDatabase;
-using System;
 
 namespace TSIM.WebServer
 {
@@ -152,6 +151,7 @@ namespace TSIM.WebServer
                 var repr = CBORObject.NewMap()
                     .Add("schedulerMode", entry.Value.SchedulerMode)
                     .Add("schedulerState", entry.Value.SchedulerState)
+                    .Add("schedule", entry.Value.Schedule)
                     .Add("numSegmentsToFollow", entry.Value.SegmentsToFollow?.Length)
                     .Add("waypointControllerState", entry.Value.WaypointControllerState)
                     .Add("tractionControllerState", entry.Value.TractionControllerState)

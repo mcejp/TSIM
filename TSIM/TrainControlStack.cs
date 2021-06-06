@@ -26,6 +26,9 @@ public class TrainControlStateSummary {
     [JsonPropertyName("schedulerState")]
     public string? SchedulerState { get; set; }
 
+    [JsonPropertyName("schedule")]
+    public string[]? Schedule { get; set; }
+
     // speed, scheduling mode ...
 
     [JsonPropertyName("segmentsToFollow")]
@@ -62,9 +65,10 @@ public class TrainControlStack {
         return _tractionController.GetPreferredContinuationSegment(fromSegmentId, fromEp);
     }
 
-    public TrainControlStateSummary GetStateSummary() => new TrainControlStateSummary {
+    public TrainControlStateSummary GetStateSummary() => new() {
         SchedulerMode = this.GetModeString(),
         SchedulerState = this.GetStateString(),
+        Schedule = GetScheduleSummary(),
 
         // TODO: how can we avoid all of this ugly conversion?
         // Perhaps the problem is that we insist on using annotation-based serialization to JSON, so we have to duplicate all structures
@@ -82,6 +86,10 @@ public class TrainControlStack {
 
     public void GoAutoSchedule() {
         _scheduleControllerInput = ScheduleController.Mode.AUTO_SCHEDULE;
+    }
+
+    private string[] GetScheduleSummary() {
+        return _scheduleController.GetSchedule().Select(entry => entry.ToString()).ToArray();
     }
 
     public float Update(double dt, DateTime simTime, TrainStatus trainStatus) {
