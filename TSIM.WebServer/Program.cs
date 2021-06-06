@@ -150,6 +150,7 @@ namespace TSIM.WebServer
 
             foreach (var entry in map) {
                 var repr = CBORObject.NewMap()
+                    .Add("schedulerMode", entry.Value.SchedulerMode)
                     .Add("schedulerState", entry.Value.SchedulerState)
                     .Add("numSegmentsToFollow", entry.Value.SegmentsToFollow?.Length)
                     .Add("waypointControllerState", entry.Value.WaypointControllerState)

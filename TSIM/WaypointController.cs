@@ -6,6 +6,7 @@ namespace TSIM {
 
 public struct WaypointControllerStatus {
     public WaypointController.State State;
+    public int? ArrivedAtStation;
 }
 
 public struct WaypointControllerCommand {
@@ -34,7 +35,8 @@ public class WaypointController {
     }
 
     int? _currentPlanForStationId = null;
-    int? _lastStationGoneTo = null;
+    private int? _lastStationArrivedAt = null;
+    int? _lastStationGoneTo = null; // This is saved only to prevent GoToNearestStation to be "stuck" at the same station
     TractionControllerCommand? _currentPlanCommand = null;
     State _state = State.STOPPED;
 
@@ -57,7 +59,7 @@ public class WaypointController {
 
     public WaypointControllerStatus GetStatus()
     {
-        return new WaypointControllerStatus { State = this._state };
+        return new WaypointControllerStatus { State = this._state, ArrivedAtStation = this._lastStationArrivedAt };
     }
 
     // WaypointControllerCommand is NOT idempotent, because we want to for example recognize two separate GOTO_NEAREST_STATION commands
@@ -90,7 +92,9 @@ public class WaypointController {
 
             case State.EN_ROUTE:
                 if (tcState == TractionController.State.IN_DESTINATION) {
+                    // (This assumes that the current plan goes all the way to destination)
                     _state = State.ARRIVED;
+                    _lastStationArrivedAt = _currentPlanForStationId;
                 }
                 break;
         }

@@ -20,6 +20,9 @@ public class TrainControlStateSummary {
         public float GoalT { get; set; }
     };
 
+    [JsonPropertyName("schedulerMode")]
+    public string? SchedulerMode { get; set; }
+
     [JsonPropertyName("schedulerState")]
     public string? SchedulerState { get; set; }
 
@@ -60,6 +63,7 @@ public class TrainControlStack {
     }
 
     public TrainControlStateSummary GetStateSummary() => new TrainControlStateSummary {
+        SchedulerMode = this.GetModeString(),
         SchedulerState = this.GetStateString(),
 
         // TODO: how can we avoid all of this ugly conversion?
@@ -71,6 +75,8 @@ public class TrainControlStack {
         WaypointControllerState = _waypointController.GetStatus().State.ToString(),
         TractionControllerState = _tractionController.GetState().ToString(),
         };
+
+    private string GetModeString() => _scheduleControllerInput.ToString();
 
     private string GetStateString() => _scheduleController.GetState().ToString();
 
