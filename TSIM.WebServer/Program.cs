@@ -56,18 +56,11 @@ namespace TSIM.WebServer
 
             var channel = connection.CreateModel();
 
-            var unitDatabaseQueue = channel.QueueDeclare().QueueName;
-            channel.ExchangeDeclare(exchange: "UnitDatabase_full.json",
+            var simStateQueue = channel.QueueDeclare().QueueName;
+            channel.ExchangeDeclare(exchange: "SimState_full.json",
                                     type: ExchangeType.Fanout);
-            channel.QueueBind(queue: unitDatabaseQueue,
-                              exchange: "UnitDatabase_full.json",
-                              routingKey: "");
-
-            var trainControlQueue = channel.QueueDeclare().QueueName;
-            channel.ExchangeDeclare(exchange: "TrainControl_full.json",
-                                    type: ExchangeType.Fanout);
-            channel.QueueBind(queue: trainControlQueue,
-                              exchange: "TrainControl_full.json",
+            channel.QueueBind(queue: simStateQueue,
+                              exchange: "SimState_full.json",
                               routingKey: "");
 
             channel.ExchangeDeclare(exchange: "TSIM.cbor",
@@ -76,13 +69,24 @@ namespace TSIM.WebServer
             var consumer = new EventingBasicConsumer(channel);
             consumer.Received += (model, ea) =>
             {
-                var body = ea.Body.ToArray();
-                var message = Encoding.UTF8.GetString(body);
+                // var message = Encoding.UTF8.GetString(ea.Body.ToArray());
                 // Console.WriteLine("RX " + message);
+
+                var (unitsSnapshot, controlSnapshot) = Serialization.UnglueFullSimSnapshot(ea.Body.ToArray());
+
+                // var message = Encoding.UTF8.GetString(unitsSnapshot);
+                // Console.WriteLine("RX " + message);
+
+                // var message = Encoding.UTF8.GetString(controlSnapshot);
+                // Console.WriteLine("RX " + message);
+
+                var controlStateMap = Serialization.DeserializeTrainControlState(controlSnapshot);
+
+                uglyGlobalTCSS = controlStateMap;
 
                 lock (sim)
                 {
-                    sim.Units.SnapshotFullRestore(body);
+                    sim.Units.SnapshotFullRestore(unitsSnapshot);
 
                     // Render outputs
 
@@ -119,25 +123,9 @@ namespace TSIM.WebServer
                 }
             };
 
-            var consumer2 = new EventingBasicConsumer(channel);
-            consumer2.Received += (model, ea) =>
-            {
-                var body = ea.Body.ToArray();
-                var message = Encoding.UTF8.GetString(body);
-                // Console.WriteLine("RX " + message);
-
-                var controlStateMap = Serialization.DeserializeTrainControlState(body);
-
-                uglyGlobalTCSS = controlStateMap;
-            };
-
-            channel.BasicConsume(queue: unitDatabaseQueue,
+            channel.BasicConsume(queue: simStateQueue,
                                   autoAck: true,
                                   consumer: consumer);
-
-            channel.BasicConsume(queue: trainControlQueue,
-                                  autoAck: true,
-                                  consumer: consumer2);
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>

@@ -42,10 +42,7 @@ namespace TSIM.SimServer
             var connection = factory.CreateConnection();
             var channel = connection.CreateModel();
 
-            channel.ExchangeDeclare(exchange: "UnitDatabase_full.json",
-                                    type: ExchangeType.Fanout);
-
-            channel.ExchangeDeclare(exchange: "TrainControl_full.json",
+            channel.ExchangeDeclare(exchange: "SimState_full.json",
                                     type: ExchangeType.Fanout);
 
             // Init Signal log
@@ -82,19 +79,15 @@ namespace TSIM.SimServer
                 if (simStep % publishPeriodSteps == 0)
                 {
                     var unitsSnapshot = sim.Units.SnapshotFullMake();
-
-                    channel.BasicPublish(exchange: "UnitDatabase_full.json",
-                                         routingKey: "",
-                                         basicProperties: null,
-                                         body: unitsSnapshot);
-
                     var controllerMap = sim.GetControllerStateSummary();
                     var controlSnapshot = Serialization.SerializeTrainControlStateToJsonUtf8Bytes(controllerMap);
 
-                    channel.BasicPublish(exchange: "TrainControl_full.json",
+                    var fullSnapshot = Serialization.GlueFullSimSnapshot(unitsSnapshot, controlSnapshot);
+
+                    channel.BasicPublish(exchange: "SimState_full.json",
                                          routingKey: "",
                                          basicProperties: null,
-                                         body: controlSnapshot);
+                                         body: fullSnapshot);
                 }
 
                 var sleepTimeMs = simStepMs - realTimeMs;
