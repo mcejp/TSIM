@@ -13,7 +13,7 @@ namespace TSIM
 
     public class Simulation
     {
-        private TimeSpan _simTimeElapsed;
+        public TimeSpan SimTimeElapsed; // class Serialization assigns this directly. what a mess
 
         public SimulationCoordinateSpace CoordSpace { get; }
         public INetworkDatabase Network { get; }
@@ -84,8 +84,8 @@ namespace TSIM
 
         public void Step(double dt)
         {
-            _log.SetSimulatedTime(_simTimeElapsed.TotalSeconds);
-            var simTime = new DateTime(2000, 01, 01) + _simTimeElapsed;
+            _log.SetSimulatedTime(SimTimeElapsed.TotalSeconds);
+            var simTime = new DateTime(2000, 01, 01) + SimTimeElapsed;
 
             // TODO: do not use Unit.Velocity as authoritative; because we're doing on-rails simulation only
             // (at least for now), it would be more efficient to track scalar speed
@@ -252,7 +252,7 @@ namespace TSIM
 //                Console.WriteLine($"Unit {unitIndex} update: pos {unit.Pos} velocity {unit.Velocity}");
             }
 
-            _simTimeElapsed += TimeSpan.FromSeconds(dt);
+            SimTimeElapsed += TimeSpan.FromSeconds(dt);
         }
     }
 }

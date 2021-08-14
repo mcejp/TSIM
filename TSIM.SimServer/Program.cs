@@ -42,7 +42,7 @@ namespace TSIM.SimServer
             var connection = factory.CreateConnection();
             var channel = connection.CreateModel();
 
-            channel.ExchangeDeclare(exchange: "SimState_full.json",
+            channel.ExchangeDeclare(exchange: "SimState_full.cbor",
                                     type: ExchangeType.Fanout);
 
             // Init Signal log
@@ -81,10 +81,11 @@ namespace TSIM.SimServer
                     var unitsSnapshot = sim.Units.SnapshotFullMake();
                     var controllerMap = sim.GetControllerStateSummary();
                     var controlSnapshot = Serialization.SerializeTrainControlStateToJsonUtf8Bytes(controllerMap);
+                    var simInfoSnapshot = Serialization.MakeSimInfoSnapshot(sim);
 
-                    var fullSnapshot = Serialization.GlueFullSimSnapshot(unitsSnapshot, controlSnapshot);
+                    var fullSnapshot = Serialization.GlueFullSimSnapshot(unitsSnapshot, controlSnapshot, simInfoSnapshot);
 
-                    channel.BasicPublish(exchange: "SimState_full.json",
+                    channel.BasicPublish(exchange: "SimState_full.cbor",
                                          routingKey: "",
                                          basicProperties: null,
                                          body: fullSnapshot);

@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using System.Text.Json;
+
+using PeterO.Cbor;
 
 namespace TSIM {
 
@@ -13,25 +15,41 @@ public class Serialization {
         return dict;
     }
 
-    public static byte[] GlueFullSimSnapshot(byte[] unitsSnapshot, byte[] trainControlSnapshot) {
+    public static byte[] GlueFullSimSnapshot(byte[] unitsSnapshot, byte[] trainControlSnapshot, CBORObject simInfoSnapshot) {
         // MEGA HACK FOR MVP
-        var a = Encoding.Default.GetString(unitsSnapshot).Replace('\n', ' ');
-        var b = Encoding.Default.GetString(trainControlSnapshot).Replace('\n', ' ');
-
-        return Encoding.Default.GetBytes(a + "\n" + b);
+        var cbor = CBORObject.NewMap()
+            .Add("units", unitsSnapshot)
+            .Add("trainControl", trainControlSnapshot)
+            .Add("simInfo", simInfoSnapshot)
+            ;
+        return cbor.EncodeToBytes();
     }
 
     public static byte[] SerializeTrainControlStateToJsonUtf8Bytes(IDictionary<int, TrainControlStateSummary> summaryMap) {
         return JsonSerializer.SerializeToUtf8Bytes(summaryMap);
     }
 
-    public static (byte[] unitsSnapshot, byte[] trainControlSnapshot) UnglueFullSimSnapshot(byte[] fullSimSnapshot) {
+    public static (byte[] unitsSnapshot, byte[] trainControlSnapshot, CBORObject simInfoSnapshot) UnglueFullSimSnapshot(byte[] fullSimSnapshot) {
         // MEGA HACK FOR MVP
-        var lst = Encoding.Default.GetString(fullSimSnapshot).Split('\n');
-        var a = lst[0];
-        var b = lst[1];
+        var cbor = CBORObject.DecodeFromBytes(fullSimSnapshot);
 
-        return (Encoding.Default.GetBytes(a), Encoding.Default.GetBytes(b));
+        return (cbor["units"].ToObject<byte[]>(),
+                cbor["trainControl"].ToObject<byte[]>(),
+                cbor["simInfo"]
+                );
+    }
+
+    public static void DeserializeInfoSnapshot(Simulation sim, CBORObject simInfoSnapshot)
+    {
+        sim.SimTimeElapsed = TimeSpan.FromSeconds(simInfoSnapshot["timeElapsed"].AsDouble());
+    }
+
+    public static CBORObject MakeSimInfoSnapshot(Simulation sim)
+    {
+        var simInfoSnapshot = CBORObject.NewMap()
+            .Add("timeElapsed", sim.SimTimeElapsed.TotalSeconds)
+            ;
+        return simInfoSnapshot;
     }
 }
 

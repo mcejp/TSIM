@@ -1,5 +1,5 @@
+using System;
 using System.IO;
-using System.Text;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using System.Collections.Generic;
@@ -57,10 +57,10 @@ namespace TSIM.WebServer
             var channel = connection.CreateModel();
 
             var simStateQueue = channel.QueueDeclare().QueueName;
-            channel.ExchangeDeclare(exchange: "SimState_full.json",
+            channel.ExchangeDeclare(exchange: "SimState_full.cbor",
                                     type: ExchangeType.Fanout);
             channel.QueueBind(queue: simStateQueue,
-                              exchange: "SimState_full.json",
+                              exchange: "SimState_full.cbor",
                               routingKey: "");
 
             channel.ExchangeDeclare(exchange: "TSIM.cbor",
@@ -72,7 +72,7 @@ namespace TSIM.WebServer
                 // var message = Encoding.UTF8.GetString(ea.Body.ToArray());
                 // Console.WriteLine("RX " + message);
 
-                var (unitsSnapshot, controlSnapshot) = Serialization.UnglueFullSimSnapshot(ea.Body.ToArray());
+                var (unitsSnapshot, controlSnapshot, simInfoSnapshot) = Serialization.UnglueFullSimSnapshot(ea.Body.ToArray());
 
                 // var message = Encoding.UTF8.GetString(unitsSnapshot);
                 // Console.WriteLine("RX " + message);
@@ -86,6 +86,7 @@ namespace TSIM.WebServer
 
                 lock (sim)
                 {
+                    Serialization.DeserializeInfoSnapshot(sim, simInfoSnapshot);
                     sim.Units.SnapshotFullRestore(unitsSnapshot);
 
                     // Render outputs
@@ -112,6 +113,7 @@ namespace TSIM.WebServer
                                 .Add("data", filedata)
                             )
                             .Add(ControlSystemStateMapToCbor(Program.uglyGlobalTCSS))
+                            .Add(SimulationStateMapToCbor(sim.SimTimeElapsed))
                         )
                         .Add("controls", CBORObject.NewArray())
                         ;
@@ -153,6 +155,20 @@ namespace TSIM.WebServer
                 .Add("topic", "control-system-state")
                 .Add("displayName", "Control System State")
                 .Add("mimeType", "TSIM.ControlSystemStateMap")
+                .Add("data", cborMap)
+                ;
+        }
+
+        private static CBORObject SimulationStateMapToCbor(TimeSpan simTimeElapsed) {
+            var cborMap = CBORObject.NewMap();
+
+            cborMap.Add("simTimeElapsed", simTimeElapsed.ToString());
+
+            return CBORObject.NewMap()
+                .Add("name", "simulation-state")    // deprecated
+                .Add("topic", "simulation-state")
+                .Add("displayName", "Simulation state")
+                .Add("mimeType", "application/json")
                 .Add("data", cborMap)
                 ;
         }
