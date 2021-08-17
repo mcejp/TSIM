@@ -39,15 +39,17 @@ public class Serialization {
                 );
     }
 
-    public static void DeserializeInfoSnapshot(Simulation sim, CBORObject simInfoSnapshot)
-    {
-        sim.SimTimeElapsed = TimeSpan.FromSeconds(simInfoSnapshot["timeElapsed"].AsDouble());
-    }
+    // public static void DeserializeInfoSnapshot(Simulation sim, CBORObject simInfoSnapshot)
+    // {
+    //     sim.SimTimeElapsed = TimeSpan.FromSeconds(simInfoSnapshot["timeElapsed"].AsDouble());
+    // }
 
-    public static CBORObject MakeSimInfoSnapshot(Simulation sim)
+    public static CBORObject MakeSimInfoSnapshot(Simulation sim, float? perfValue)
     {
         var simInfoSnapshot = CBORObject.NewMap()
-            .Add("timeElapsed", sim.SimTimeElapsed.TotalSeconds)
+            .Add("simTimeElapsedSec", sim.SimTimeElapsed.TotalSeconds)
+            .Add("perf", perfValue)
+            // .Add("timeStepSec", sim.)
             ;
         return simInfoSnapshot;
     }

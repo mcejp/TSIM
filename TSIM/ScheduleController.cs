@@ -93,6 +93,7 @@ public class ScheduleController {
                             // Update arrival time + add station to auto-schedule
                             int stationArrived = wpcStatus.ArrivedAtStation.Value;
 
+                            // TODO: bound schedule length
                             _schedule.Add(new ScheduleEntry {
                                 ArrivalTime = simTime,
                                 DepartureTime = simTime + boardingTimeInAutoScheduleMode,

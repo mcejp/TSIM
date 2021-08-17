@@ -8,6 +8,7 @@ using PeterO.Cbor;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
+using TSIM.Model;
 using TSIM.RailroadDatabase;
 
 namespace TSIM.WebServer
@@ -86,7 +87,7 @@ namespace TSIM.WebServer
 
                 lock (sim)
                 {
-                    Serialization.DeserializeInfoSnapshot(sim, simInfoSnapshot);
+                    // Serialization.DeserializeInfoSnapshot(sim, simInfoSnapshot);
                     sim.Units.SnapshotFullRestore(unitsSnapshot);
 
                     // Render outputs
@@ -113,7 +114,8 @@ namespace TSIM.WebServer
                                 .Add("data", filedata)
                             )
                             .Add(ControlSystemStateMapToCbor(Program.uglyGlobalTCSS))
-                            .Add(SimulationStateMapToCbor(sim.SimTimeElapsed))
+                            .Add(SimulationStateMapToCbor(/*sim.SimTimeElapsed*/ simInfoSnapshot))
+                            .Add(UnitsToCbor(sim.Units))
                         )
                         .Add("controls", CBORObject.NewArray())
                         ;
@@ -122,6 +124,7 @@ namespace TSIM.WebServer
                                          routingKey: "",
                                          basicProperties: null,
                                          body: cbor.EncodeToBytes());
+                    // Console.WriteLine($"Pub now");
                 }
             };
 
@@ -159,17 +162,47 @@ namespace TSIM.WebServer
                 ;
         }
 
-        private static CBORObject SimulationStateMapToCbor(TimeSpan simTimeElapsed) {
-            var cborMap = CBORObject.NewMap();
+        private static CBORObject SimulationStateMapToCbor(/*TimeSpan simTimeElapsed*/ CBORObject simInfoSnapshot) {
+            // var cborMap = CBORObject.NewMap();
 
-            cborMap.Add("simTimeElapsed", simTimeElapsed.ToString());
+            // cborMap.Add("simTimeElapsed", simTimeElapsed.ToString());
 
             return CBORObject.NewMap()
                 .Add("name", "simulation-state")    // deprecated
                 .Add("topic", "simulation-state")
                 .Add("displayName", "Simulation state")
-                .Add("mimeType", "application/json")
-                .Add("data", cborMap)
+                .Add("mimeType", "application/cbor")
+                // .Add("data", cborMap)
+                .Add("data", simInfoSnapshot)
+                ;
+        }
+
+        private static CBORObject UnitsToCbor(IUnitDatabase units) {
+            // var cborMap = CBORObject.NewMap();
+
+            // cborMap.Add("simTimeElapsed", simTimeElapsed.ToString());
+
+            var list = CBORObject.NewArray();
+
+            foreach (var unit in units.EnumerateUnits()) {
+                var direction = Utility.QuaternionToDirectionVector(unit.Orientation);
+                var dirZ = Math.Atan2(direction.Y, direction.X);
+
+                list.Add(CBORObject.NewMap()
+                    .Add("pos", unit.Pos)
+                    // .Add("direction", direction)
+                    .Add("heading", dirZ)
+                    // .Add("orientation", unit.Orientation)
+                    .Add("speed", unit.Velocity.Length())
+                    );
+            }
+
+            return CBORObject.NewMap()
+                .Add("name", "units")    // deprecated
+                .Add("topic", "units")
+                .Add("displayName", "Units")
+                .Add("mimeType", "application/cbor")
+                .Add("data", list)
                 ;
         }
     }

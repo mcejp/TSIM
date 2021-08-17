@@ -10,10 +10,7 @@ namespace TSIM.SimServer
 {
     public class Program
     {
-        const int simStepMs = 200;
-        const int publishPeriodSteps = 5; // 5*5;
-
-        public static void Main(string[] args)
+        public static void Main(float simStep = 0.2F, int publishInterval = 5)
         {
             // Doing this "properly" is super crap. (Why again?)
             string workDir = File.Exists("work/simdb.sqlite") ? "work" : "../work";
@@ -48,6 +45,7 @@ namespace TSIM.SimServer
             // Init Signal log
             var eh = log.GetEntityHandle(typeof(Program), -1);
             var perfPin = log.GetSignalPin(eh, "timeUtilization");
+            float? lastPerfValue = null;
 
             var sw = new Stopwatch();
 
@@ -55,33 +53,35 @@ namespace TSIM.SimServer
             var simTimeSinceLastReportMs = 0;
             long realTimeSinceLastReportMs = 0;
 
-            for (int simStep = 0; ; simStep++)
+            for (int simStepNum = 0; ; simStepNum++)
             {
                 sw.Restart();
-                sim.Step(simStepMs * 0.001);
+                sim.Step(simStep);
                 sw.Stop();
 
                 var realTimeMs = sw.ElapsedMilliseconds;
 
-                simTimeSinceLastReportMs += simStepMs;
+                simTimeSinceLastReportMs += (int)(simStep * 1000);
                 realTimeSinceLastReportMs += realTimeMs;
 
                 if (DateTime.Now > lastReport + TimeSpan.FromSeconds(1))
                 {
 //                    Console.WriteLine($"Took {realTimeSinceLastReportMs * 0.001:F2} s to simulate {simTimeSinceLastReportMs * 0.001:F2} s");
-                    log.Feed(perfPin, (float) realTimeSinceLastReportMs / simTimeSinceLastReportMs);
+                    var perf = (float) realTimeSinceLastReportMs / simTimeSinceLastReportMs;
+                    log.Feed(perfPin, perf);
+                    lastPerfValue = perf;
 
                     lastReport = DateTime.Now;
                     simTimeSinceLastReportMs = 0;
                     realTimeSinceLastReportMs = 0;
                 }
 
-                if (simStep % publishPeriodSteps == 0)
+                if (simStepNum % publishInterval == 0)
                 {
                     var unitsSnapshot = sim.Units.SnapshotFullMake();
                     var controllerMap = sim.GetControllerStateSummary();
                     var controlSnapshot = Serialization.SerializeTrainControlStateToJsonUtf8Bytes(controllerMap);
-                    var simInfoSnapshot = Serialization.MakeSimInfoSnapshot(sim);
+                    var simInfoSnapshot = Serialization.MakeSimInfoSnapshot(sim, lastPerfValue);
 
                     var fullSnapshot = Serialization.GlueFullSimSnapshot(unitsSnapshot, controlSnapshot, simInfoSnapshot);
 
@@ -89,9 +89,10 @@ namespace TSIM.SimServer
                                          routingKey: "",
                                          basicProperties: null,
                                          body: fullSnapshot);
+                    // Console.WriteLine($"Pub {sim.SimTimeElapsed}");
                 }
 
-                var sleepTimeMs = simStepMs - realTimeMs;
+                var sleepTimeMs = simStep * 1000 - realTimeMs;
 
                 if (sleepTimeMs > 0)
                 {
