@@ -5,7 +5,7 @@ Transport simulation playground
 
 ## How to run (real-time mode)
 
-0. RabbitMQ must be running: `docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management`
+0. RabbitMQ must be running: `podman build --tag tsim-rabbitmq tsim-rabbitmq && and podman run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 -p 15674:15674 tsim-rabbitmq`
 1. Open project in Rider
 2. Build and execute target "TSIM". This initializes the simulation database from "data/scenario.json" and writes the
    database to "simdb.sqlite" (for the moment hardcoded)
